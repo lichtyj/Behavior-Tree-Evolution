@@ -45,10 +45,6 @@ class Terrain {
     getHeight(x,y) {
         x = x|0;
         y = y|0;
-        x = Math.min(x, worldSize);
-        x = Math.max(x, 0);
-        y = Math.min(y, worldSize);
-        y = Math.max(y, 0);
         return this.map[x][y];
     }
 
@@ -57,14 +53,36 @@ class Terrain {
         return this.type[m];
     }
 
-    getRandomLand() {
+    getSlope(x,y) {
+        var slope = new Vector(this.getHeight(x - 1, y) - this.getHeight(x + 1, y),
+            this.getHeight(x, y - 1) - this.getHeight(x, y + 1));
+        return slope.mult(100);
+    }
+
+    getRandomLand(noCollisions) {
+        if (noCollisions == undefined) noCollisions = false;
         var valid = false;
         var h;
         var pos;
         while (!valid) {
             pos = Vector.randomPositive(worldSize, false);
             h = this.getHeight(pos.x, pos.y);
-            if (h > 0.375 && h < 0.875) {
+            if ((h > 0.375 && h < 0.875) && (game.quadtree.retrieve(pos.x, pos.y, 10).length == 0 || !noCollisions)) {
+                valid = true;
+            }
+        }
+        return pos;
+    }
+
+    getRandomLowLand(noCollisions) {
+        if (noCollisions == undefined) noCollisions = false;
+        var valid = false;
+        var h;
+        var pos;
+        while (!valid) {
+            pos = Vector.randomPositive(worldSize, false);
+            h = this.getHeight(pos.x, pos.y);
+            if (h < 0.375 && (game.quadtree.retrieve(pos.x, pos.y, 10).length == 0 || !noCollisions)) {
                 valid = true;
             }
         }
@@ -80,6 +98,7 @@ class Terrain {
         this.clampWorld();
         this.draw();
         console.log("Done drawing world");
+        this.generatePlants(500);
         game.start();
     }
 
@@ -154,6 +173,7 @@ class Terrain {
     populate() {
         terrain.generateObjects(250);        
         terrain.generateFood(10);
+        terrain.generatePlants(10);
         // terrain.generateChickens(20);
     }
 
@@ -188,14 +208,27 @@ class Terrain {
 
     generateFood(count) {
         var type;
-        var spin;
+        var spin = 0.01;
         for (var i = 0; i < count; i++) {
             switch (Math.floor(Math.random()*0)) {
                 case 0:
                     type = "rawMeat";
                     break;
             }
-            game.addEntity(new Resource(this.getRandomLand(), type, Math.random()*Math.PI*2, spin));
+            game.addEntity(new Resource(this.getRandomLand(true), type, Math.random()*Math.PI*2, spin));
+        }
+    }
+
+    generatePlants(count) {
+        var type;
+        var spin = 0;
+        for (var i = 0; i < count; i++) {
+            switch (Math.floor(Math.random()*0)) {
+                case 0:
+                    type = "bush";
+                    break;
+            }
+            game.addEntity(new Resource(this.getRandomLand(true), type, Math.random()*Math.PI*2, spin));
         }
     }
 

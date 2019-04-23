@@ -40,6 +40,10 @@ class BehaviorTree {
         return this.active.delay;
     }
 
+    getBehavior() {
+        this.root.tick(this);
+    }
+
     addNode(parent, type, name, arg1) {
         var newNode;
         switch(type) {
@@ -49,6 +53,9 @@ class BehaviorTree {
             case "Sequence":
                 newNode = new SequenceNode(parent, name);
                 break;
+            case "Inverter":
+                newNode = new InverterNode(parent, name);
+                break;
             case "Action":
                 newNode = new ActionNode(parent, name, arg1);
                 break;
@@ -56,7 +63,12 @@ class BehaviorTree {
                 newNode = new ParentNode(parent, name);
                 break;
         }
-        parent.children.push(newNode);
+        if (parent instanceof ActionNode || 
+            (parent instanceof InverterNode && parent.children.length > 0)) {
+            console.error("Invalid Tree Operation");
+        } else {
+            parent.children.push(newNode);
+        }
         return newNode;
     }
 }

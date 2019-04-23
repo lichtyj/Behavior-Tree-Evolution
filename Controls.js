@@ -2,6 +2,8 @@ class Controls {
     constructor() {
         this.keys = [];
         this.lmb = 0;
+        this.mouseX = 0;
+        this.mouseY = 0;
         this.doc;
     }
 
@@ -40,23 +42,38 @@ class Controls {
 
     keyDown(num) {
         if (this.keys.indexOf(num) == -1) {
-            // console.log(num);
+            console.log(num);
             this.keys.push(num);
         }
     }
 
     mouseButton(e, pressed) {
         if (pressed) {
-            Npc.create(new Vector((game.view.x + (game.viewWidth + e.layerX - 200)/2) | 0, (game.view.y + (game.viewHeight + e.layerY - 200)/2)|0, 0), "chicken");
-            game.ui.pushMessage("Added chicken");
+            this.mouseX = (game.view.x + (game.viewWidth + e.layerX - 200)/2) | 0;
+            this.mouseY = (game.view.y + (game.viewHeight + e.layerY - 200)/2) | 0;
             if (this.keys.indexOf("lmb") == -1) this.keys.push("lmb");
         } else {
-            delete this.keys.splice(this.keys.indexOf("lmb"),1);
+            this.keyUp("lmb");
         }
     }
 
     mouseWheel(y) {
         // terrain.zoomIn(y*.05);
+    }
+
+    pausedActions() {
+        if (game.paused) {            
+            for (var key of this.keys) {
+                switch(key) {
+                    case 32: // space
+                        game.update(game.step);
+                        game.draw(game.step);
+                        game.ui.draw();
+                        this.keyUp(key);
+                        break;
+                }
+            }
+        }
     }
 
     actions() {
@@ -69,17 +86,32 @@ class Controls {
                 case 68: // D
                     moving.add(Vector.right());
                     break;
+                case 69: // E
+                    if (game.cameraTarget instanceof(Npc)) {
+                        game.cameraTarget.lastDamage = "you";
+                        game.cameraTarget.die();
+                    }
+                    this.keyUp(key);
+                    break;
                 case 70: // F
                     terrain.generateChickens(1);
-                    this.keyUp(70);
+                    this.keyUp(key);
                     break;
                 case 71: // G
                     terrain.generateObjects(25);
-                    this.keyUp(71);
+                    this.keyUp(key);
                     break;
                 case 72: // H
                     terrain.generateFood(25);
-                    this.keyUp(72);
+                    this.keyUp(key);
+                    break;
+                case 80: // P
+                    if (game.paused) {
+                        game.resume();
+                    } else {
+                        game.pause();
+                    }
+                    this.keyUp(key);
                     break;
                 case 83: // S
                     moving.add(Vector.back());
@@ -89,11 +121,21 @@ class Controls {
                     break;
                 case 118: // F7
                     game.save();
-                    this.keyUp(118);
+                    this.keyUp(key);
                     break;
                 case 120: // F9
                     game.load();
-                    this.keyUp(120);
+                    this.keyUp(key);
+                    break;
+                case "lmb":
+                    if (this.keys.indexOf(81) != -1) { //  Q
+                        var npc = Npc.create(new Vector(this.mouseX, this.mouseY, 0), "chicken");
+                        npc.setStats();
+                        game.ui.pushMessage("Added chicken");
+                    } else {
+                        game.selectNpc(this.mouseX, this.mouseY);
+                    }
+                    this.keyUp(key);
                     break;
             }
         }

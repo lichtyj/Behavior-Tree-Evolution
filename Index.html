@@ -47,6 +47,30 @@
                 width: 800px;
                 height: 800px;
             }
+
+            li {
+                background: rgb(182, 182, 182);
+                display:block;
+                float: left;
+            }
+
+            ul {
+                float: right;
+            }
+
+            #params {
+                float:right;
+                width:350px;
+            }
+
+            select {
+                width:175px;
+            }
+
+            button {
+                width:175px;
+            }
+
         </style>
     </head>
 
@@ -57,6 +81,85 @@
             </canvas> 
             <canvas class="can" id="uiCanvas">
             </canvas>
+        </div>
+
+        <div id="params">
+            <li>
+                <ul>
+                    <label>Entity type:</label>
+                    <select id="select">
+                        <option value="chicken">Chicken</option>
+                        <option value="tree">Tree</option>
+                    </select>
+                </ul>
+                <ul>
+                    <label>Health:</label>
+                    <input id="health" type="text">
+                </ul>
+                <ul>
+                    <label>Max health:</label>
+                    <input id="maxHealth" type="text">
+                </ul>
+                <ul>
+                    <label>Hunger:</label>
+                    <input id="hunger" type="text">
+                </ul>
+                <ul>
+                    <label>Thirst:</label>
+                    <input id="thirst" type="text">
+                </ul>
+                <ul>
+                    <label>Energy:</label>
+                    <input id="energy" type="text">
+                </ul>
+                <ul>
+                    <label>Metabolic rate:</label>
+                    <input id="metabolicRate" type="text">
+                </ul>
+                <ul>
+                    <label>Thirst threshold:</label>
+                    <input id="thirstThreshold" type="text">
+                </ul>
+                <ul>
+                    <label>Hunger threshold:</label>
+                    <input id="hungerThreshold" type="text">
+                </ul>
+                <ul>
+                    <label>Energy threshold:</label>
+                    <input id="energyThreshold" type="text">
+                </ul>
+                <ul>
+                    <label>Wander weight:</label>
+                    <input id="wanderWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Uphill weight:</label>
+                    <input id="uphillWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Food weight:</label>
+                    <input id="foodWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Water weight:</label>
+                    <input id="waterWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Orientation weight:</label>
+                    <input id="orientationWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Cohesion weight:</label>
+                    <input id="cohesionWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Separation weight:</label>
+                    <input id="separationWeight" type="text">
+                </ul>
+                <ul>
+                    <button id="defaults" onclick="setDefaults()">Defaults</button>
+                </ul>
+            </li>
         </div>
         <canvas id="btCanvas" tabindex="1" style="float: left; border: solid #000 2px;">
             Your browser does not support the canvas element.

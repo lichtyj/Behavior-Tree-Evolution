@@ -4,8 +4,8 @@ class Entity {
         this.velocity = new Vector();
         this.direction = new Vector();
         this.acceleration = new Vector();
-        this.topAcc = .2;
-        this.topVel = 1;
+        this.topAcc = .1;
+        this.topVel = .5;
         this.sprite = sprite;
         this.rotation = 0;
         this.gravity = .125;
@@ -29,7 +29,8 @@ class Entity {
         this.velocity.limit(this.topVel);
         this.velocity.z = grav;
         this.velocity.mult(.95);
-        this.acceleration.mult(0);
+        if (!(this.velocity instanceof Vector)) console.error("Foooound it");
+        this.acceleration.mult(0.75);
 
         if (this.position.x < 0) this.position.x += worldSize;
         if (this.position.y < 0) this.position.y += worldSize;

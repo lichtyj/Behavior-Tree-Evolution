@@ -43,6 +43,15 @@ class Vector { // Ignores z in all non-elementary calcs
         return this;
     }
 
+    scale(scalar) {
+        var temp = this.magnitude();
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+        this.limit(temp*scalar);
+        return this;
+    }
+
     limit(max) {
         var last = Math.abs(this.z) | 0;
         var mag = this.magnitude();
@@ -153,6 +162,10 @@ class Vector { // Ignores z in all non-elementary calcs
 
     static distanceSqrd3D(me, other) {
         return Math.pow(me.x - other.x, 2) + Math.pow(me.y - other.y, 2) + Math.pow(me.z - other.z, 2);
+    }
+
+    static towardPoint(from, to) {
+        return new Vector(to.x - from.x, to.y - from.y, 0);
     }
 
     //TODO return an encapsulated version of these.  Single instance - no GC    

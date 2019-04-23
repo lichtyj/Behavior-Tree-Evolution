@@ -73,7 +73,27 @@ function start() {
     btRenderer.init();
     terrain.init();
     controls.init();
+    setDefaults();
 }
 
-
-
+function setDefaults() {
+    var npc = Npc.create(new Vector(10,10), document.getElementById("health").value);
+    document.getElementById("health").value = npc.health;
+    document.getElementById("maxHealth").value = npc.maxhealth;
+    document.getElementById("hunger").value = npc.hunger;
+    document.getElementById("thirst").value = npc.thirst;
+    document.getElementById("energy").value = npc.energy;
+    document.getElementById("metabolicRate").value = npc.metabolicRate;
+    document.getElementById("thirstThreshold").value = npc.thirstThreshold;
+    document.getElementById("hungerThreshold").value = npc.hungerThreshold;
+    document.getElementById("energyThreshold").value = npc.energyThreshold;
+    document.getElementById("wanderWeight").value = npc.wanderWeight;
+    document.getElementById("uphillWeight").value = npc.uphillWeight;
+    document.getElementById("foodWeight").value = npc.foodWeight;
+    document.getElementById("waterWeight").value = npc.waterWeight;
+    document.getElementById("orientationWeight").value = npc.orientationWeight;
+    document.getElementById("cohesionWeight").value = npc.cohesionWeight;
+    document.getElementById("separationWeight").value = npc.separationWeight;
+    npc.health = 0;
+    game.remove(npc);
+}

@@ -16,6 +16,8 @@ class GameEngine {
         this.paused = true;
         this.ui = new GUI(uiCtx);
         this.state = "loading";
+
+        this.plantTimer = 1000;
     }
 
     init() {
@@ -35,7 +37,9 @@ class GameEngine {
     }
 
     cameraMove(direction) {
-        this.cameraTarget.position.add(direction);
+        if (!(this.cameraTarget instanceof(Npc))) {
+            this.cameraTarget.position.add(direction.mult(4));
+        }
     }
 
     gameLoop() {
@@ -49,6 +53,8 @@ class GameEngine {
             }
             game.lastFrame = current;
             game.ui.draw();
+        } else {
+            controls.pausedActions();
         }
 
         if (game.state == "loading") {
@@ -61,6 +67,13 @@ class GameEngine {
         this.quadtree.clear();
         for (var i = this.entities.length-1; i >= 0; i--) {
             this.quadtree.insert(this.entities[i]);
+        }
+
+
+        this.plantTimer--;
+        if (this.plantTimer <= 0) {
+            this.plantTimer = 1000;
+            terrain.generatePlants(10);
         }
 
         controls.actions();
@@ -90,6 +103,33 @@ class GameEngine {
         var vx = -this.view.x - (terrain.zoom-100)*2 + (worldSize - this.viewWidth)*.5;
         var vy = -this.view.y - (terrain.zoom-100)*2 + (worldSize - this.viewHeight)*.5;
         this.ctx.canvas.style.backgroundPosition = vx + "px " + vy + "px";
+    }
+
+    selectNpc(x, y) {
+        var near = this.quadtree.retrieve(x,y, 20);
+        if (near.length > 0) {
+            var nearest = near[0];
+            var mouse = new Vector(x,y);
+            for (var n of near) {
+                if (n instanceof Npc && Vector.distanceSqrd(mouse, n.position) < Vector.distanceSqrd(mouse, nearest.position)) {
+                    nearest = n;
+                }
+            }
+            this.cameraTarget = nearest;
+            this.initEntityView(nearest);
+        } else {
+            this.dropCamera();
+        }
+    }
+
+    initEntityView(npc) {
+        btRenderer.setTree(npc.ai);
+        // this.setStats(npc);
+    }
+
+    dropCamera() {
+        btRenderer.clearCanvas();
+        this.cameraTarget = {position: new Vector(this.view.x + this.viewWidth/2, this.view.y + this.viewHeight/2, 0)};
     }
 
     pause() {
@@ -122,6 +162,25 @@ class GameEngine {
 
     remove(entity) {
         this.toRemove.push(entity);
+    }
+
+    setStats(npc) { 
+        document.getElementById("health").value = npc.health;
+        document.getElementById("maxHealth").value = npc.maxhealth;
+        document.getElementById("hunger").value = npc.hunger;
+        document.getElementById("thirst").value = npc.thirst;
+        document.getElementById("energy").value = npc.energy;
+        document.getElementById("metabolicRate").value = npc.metabolicRate;
+        document.getElementById("thirstThreshold").value = npc.thirstThreshold;
+        document.getElementById("hungerThreshold").value = npc.hungerThreshold;
+        document.getElementById("energyThreshold").value = npc.energyThreshold;
+        document.getElementById("wanderWeight").value = npc.wanderWeight;
+        document.getElementById("uphillWeight").value = npc.uphillWeight;
+        document.getElementById("foodWeight").value = npc.foodWeight;
+        document.getElementById("waterWeight").value = npc.waterWeight;
+        document.getElementById("orientationWeight").value = npc.orientationWeight;
+        document.getElementById("cohesionWeight").value = npc.cohesionWeight;
+        document.getElementById("separationWeight").value = npc.separationWeight;
     }
 
     saveData() {

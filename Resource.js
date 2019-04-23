@@ -3,7 +3,7 @@ class Resource extends StaticEntity {
         super(position, type, rotation);
         this.spin = spin;
         this.type = type;
-        this.timer = 30;
+        this.amount = 100;
     }
 
     static create(position, type, rotation, spin) {
@@ -16,30 +16,22 @@ class Resource extends StaticEntity {
         game.remove(this);
     }
 
-    takeDamage(other) {
-        if (this.type == "rawMeat" && other.type == "fire" || other.type == "plasma") {
-            this.type = "cookedMeat";
-            this.sprite = assetMgr.getSprite(this.type);
-        }
-    }
-
     draw(ctx, dt) {
-        this.rotation += 0.01;
+        this.rotation += this.spin;
         this.elapsedTime += dt;
-        this.timer--;
         this.sprite.drawSprite(ctx, this.elapsedTime, this.position.x, this.position.y, 
-            0/*this.position.z*/, this.rotation, this.bounce += .075, this.spin, true);
+            0/*this.position.z*/, this.rotation, this.bounce += .075, null, true);
     }
 
     save() {
         return JSON.stringify({position:this.position, type:this.type, 
-            rotation:this.rotation, spin:this.spin, timer:this.timer});
+            rotation:this.rotation, spin:this.spin, amount:this.amount});
     }
 
     static load(data) {
         data = JSON.parse(data);
         var obj = Resource.create(Vector.create(data.position), data.type, data.rotation, data.spin);
-        obj.timer = data.timer;
+        obj.amount = data.amount;
         return obj;
     }
 }
