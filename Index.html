@@ -7,9 +7,11 @@
         <script language="javascript" type="text/javascript" src="Entity.js"></script>
         <script language="javascript" type="text/javascript" src="StaticEntity.js"></script>
         <script language="javascript" type="text/javascript" src="Resource.js"></script>
+        <script language="javascript" type="text/javascript" src="DNA.js"></script>
 
         <script language="javascript" type="text/javascript" src="GameEngine.js"></script>
         <script language="javascript" type="text/javascript" src="GUI.js"></script>
+        <script language="javascript" type="text/javascript" src="Graphing.js"></script>
         <script language="javascript" type="text/javascript" src="Npc.js"></script>
         <script language="javascript" type="text/javascript" src="Quadtree.js"></script>
                         
@@ -41,6 +43,11 @@
                 border: solid black 1px;
             }
 
+            #dataCanvas {
+                width: 300px;
+                height: 1560px;                
+            }
+
             #viewport {
                 position: relative;
                 float: left;
@@ -60,7 +67,7 @@
 
             #params {
                 float:right;
-                width:350px;
+                width:375px;
             }
 
             select {
@@ -82,7 +89,9 @@
             <canvas class="can" id="uiCanvas">
             </canvas>
         </div>
-
+        <canvas id="dataCanvas" tabindex="1" style="float: left; border: solid #000 2px;">
+            Your browser does not support the canvas element.
+        </canvas>
         <div id="params">
             <li>
                 <ul>
@@ -109,6 +118,10 @@
                     <input id="thirst" type="text">
                 </ul>
                 <ul>
+                    <label>Mate:</label>
+                    <input id="mate" type="text">
+                </ul>
+                <ul>
                     <label>Energy:</label>
                     <input id="energy" type="text">
                 </ul>
@@ -125,8 +138,24 @@
                     <input id="hungerThreshold" type="text">
                 </ul>
                 <ul>
+                    <label>Mating threshold:</label>
+                    <input id="matingThreshold" type="text">
+                </ul>
+                <ul>
                     <label>Energy threshold:</label>
                     <input id="energyThreshold" type="text">
+                </ul>
+                <ul>
+                    <label>Thirst sated:</label>
+                    <input id="thirstSated" type="text">
+                </ul>
+                <ul>
+                    <label>Hunger sated:</label>
+                    <input id="hungerSated" type="text">
+                </ul>
+                <ul>
+                    <label>Energy sated:</label>
+                    <input id="energySated" type="text">
                 </ul>
                 <ul>
                     <label>Wander weight:</label>
@@ -137,12 +166,28 @@
                     <input id="uphillWeight" type="text">
                 </ul>
                 <ul>
-                    <label>Food weight:</label>
-                    <input id="foodWeight" type="text">
+                    <label>Food Preference:</label>
+                    <input id="foodPreference" type="text">
+                </ul>
+                <ul>
+                    <label>Attack Preference:</label>
+                    <input id="attackPreference" type="text">
+                </ul>
+                <ul>
+                    <label>Meat weight:</label>
+                    <input id="meatWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Plant weight:</label>
+                    <input id="plantWeight" type="text">
                 </ul>
                 <ul>
                     <label>Water weight:</label>
                     <input id="waterWeight" type="text">
+                </ul>
+                <ul>
+                    <label>Mating weight:</label>
+                    <input id="matingWeight" type="text">
                 </ul>
                 <ul>
                     <label>Orientation weight:</label>
@@ -157,6 +202,42 @@
                     <input id="separationWeight" type="text">
                 </ul>
                 <ul>
+                    <label>Mating donation (M):</label>
+                    <input id="matingDonationM" type="text">
+                </ul>
+                <ul>
+                    <label>Mating donation (F):</label>
+                    <input id="matingDonationF" type="text">
+                </ul>
+                <ul>
+                    <label>Drowning Aggression:</label>
+                    <input id="drowningAggression" type="text">
+                </ul>
+                <ul>
+                    <label>Food Aggression:</label>
+                    <input id="foodAggression" type="text">
+                </ul>
+                <ul>
+                    <label>Drink Aggression:</label>
+                    <input id="drinkAggression" type="text">
+                </ul>
+                <ul>
+                    <label>Mating Aggression:</label>
+                    <input id="matingAggression" type="text">
+                </ul>
+                <ul>
+                    <label>Wander Aggression:</label>
+                    <input id="wanderAggression" type="text">
+                </ul>
+                <ul>
+                    <label>Attack Delay:</label>
+                    <input id="attackDelay" type="text">
+                </ul>
+                <ul>
+                    <label>Loyalty:</label>
+                    <input id="loyalty" type="text">
+                </ul>
+                <ul>
                     <button id="defaults" onclick="setDefaults()">Defaults</button>
                 </ul>
             </li>
@@ -164,5 +245,6 @@
         <canvas id="btCanvas" tabindex="1" style="float: left; border: solid #000 2px;">
             Your browser does not support the canvas element.
         </canvas>
+        <textarea id="logDNA"></textarea>
     </body>
 </html>

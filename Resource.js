@@ -17,6 +17,10 @@ class Resource extends StaticEntity {
     }
 
     draw(ctx, dt) {
+        if (this.type == "rawMeat") {
+            if (this.amount <= 0) this.remove();
+            if (Math.random() < 0.01) this.amount--;
+        }
         this.rotation += this.spin;
         this.elapsedTime += dt;
         this.sprite.drawSprite(ctx, this.elapsedTime, this.position.x, this.position.y, 

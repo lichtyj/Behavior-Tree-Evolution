@@ -5,8 +5,8 @@ class BtRenderer {
         this.cSize = 400;
         this.bt;
         this.size = 30;
-        this.gap = 30;
-        this.offset = 30;
+        this.gap = 20;
+        this.offset = 25;
 
         this.x = 0;
         this.y = 0;
@@ -25,7 +25,7 @@ class BtRenderer {
     setTree(newBt) {
         if (newBt instanceof BehaviorTree) {
             this.bt = newBt;
-            console.log("Drawing " + newBt.entity.spr + "'s tree");
+            // console.log("Drawing " + newBt.entity.spr + "'s tree");
             this.getOffsets(newBt.root);
             this.formatTree(newBt.root);
             this.centerTree(newBt.root);
@@ -49,7 +49,7 @@ class BtRenderer {
     }
 
     formatTree(node) {
-        console.log(node.name + ": " + node.xOffset);
+        // console.log(node.name + ": " + node.xOffset);
         node.x = 0;
         if (node.parent != null) {
             var index = node.parent.children.indexOf(node);
@@ -83,11 +83,11 @@ class BtRenderer {
     drawTree() {
         this.clearCanvas();
         var tree = this.bt.root.getTree();
-        console.log(tree);
+        // console.log(tree);
         
         for (var i = 0; i < tree.length; i++) {
             this.drawNode(tree[i]);
-            console.log(tree[i]);
+            // console.log(tree[i]);
         }
     }
 

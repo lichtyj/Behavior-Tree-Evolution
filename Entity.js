@@ -4,8 +4,8 @@ class Entity {
         this.velocity = new Vector();
         this.direction = new Vector();
         this.acceleration = new Vector();
-        this.topAcc = .1;
-        this.topVel = .5;
+        this.topAcc;
+        this.topVel;
         this.sprite = sprite;
         this.rotation = 0;
         this.gravity = .125;

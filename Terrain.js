@@ -4,7 +4,7 @@ class Terrain {
         this.colors = [];
         this.type = [];
 
-        this.zoom = 1024;
+        this.zoom = 256;
     }
 
     init() {
@@ -42,10 +42,14 @@ class Terrain {
         this.type.push("Peak");
     }
 
+    isInBounds(x, y) {
+        return (x >= 0 && y >= 0 && x < this.map.length && y < this.map[0].length);
+    }
+
     getHeight(x,y) {
         x = x|0;
         y = y|0;
-        return this.map[x][y];
+        return (this.isInBounds(x,y))? this.map[x][y] : null;
     }
 
     getTerrainType(x,y) {
@@ -68,6 +72,21 @@ class Terrain {
             pos = Vector.randomPositive(worldSize, false);
             h = this.getHeight(pos.x, pos.y);
             if ((h > 0.375 && h < 0.875) && (game.quadtree.retrieve(pos.x, pos.y, 10).length == 0 || !noCollisions)) {
+                valid = true;
+            }
+        }
+        return pos;
+    }
+
+    getRandomLandRange(min, max, noCollisions) {
+        if (noCollisions == undefined) noCollisions = false;
+        var valid = false;
+        var h;
+        var pos;
+        while (!valid) {
+            pos = Vector.randomPositive(worldSize, false);
+            h = this.getHeight(pos.x, pos.y);
+            if ((h > min && h < max) && (game.quadtree.retrieve(pos.x, pos.y, 10).length == 0 || !noCollisions)) {
                 valid = true;
             }
         }
@@ -98,7 +117,7 @@ class Terrain {
         this.clampWorld();
         this.draw();
         console.log("Done drawing world");
-        this.generatePlants(500);
+        this.generatePlants(200);
         game.start();
     }
 
@@ -228,13 +247,17 @@ class Terrain {
                     type = "bush";
                     break;
             }
-            game.addEntity(new Resource(this.getRandomLand(true), type, Math.random()*Math.PI*2, spin));
+            // game.addEntity(new Resource(this.getRandomLand(true), type, Math.random()*Math.PI*2, spin));
+            game.addEntity(new Resource(this.getRandomLandRange(0.5, 0.8, true), type, Math.random()*Math.PI*2, spin));
         }
     }
 
-    generateChickens(count) {
+    generateNpcs(count, type) {
+        var temp;
         for (var i = 0; i < count; i++) {
-            Npc.create(this.getRandomLand(), "chicken");
+            temp = DNA.default();
+            temp.mutate(50);
+            Npc.create(this.getRandomLand(), type, temp);
         };
     }
 
@@ -246,6 +269,4 @@ class Terrain {
         this.map = JSON.parse(data);
         draw();
     }
-
-
 }

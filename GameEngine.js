@@ -13,9 +13,30 @@ class GameEngine {
         this.view = new Vector();
         this.quadtree;
         this.toRemove = [];
-        this.paused = true;
+        this.paused = false;
         this.ui = new GUI(uiCtx);
         this.state = "loading";
+
+        this.recordAge = 0;
+        this.recordAgeDNA = DNA.default();
+        this.recordBirths = 0;
+        this.recordBirthsDNA = DNA.default();
+        this.recordFood = 0;
+        this.recordFoodDNA = DNA.default();
+        this.recordWater = 0;
+        this.recordWaterDNA = DNA.default();
+        this.recordDist = 0;
+        this.recordDistDNA = DNA.default();
+        this.recordMetabolism = 0;
+        this.recordMetabolismDNA = DNA.default();
+        this.recordEnergyGen = 0;
+        this.recordEnergyGenDNA = DNA.default();
+
+        this.visualization = true;
+
+        this.npcs = [];
+        this.population = 0;
+        this.time = 0;
 
         this.plantTimer = 1000;
     }
@@ -31,8 +52,9 @@ class GameEngine {
     }
 
     start() {
-        this.ui.pushMessage("CLICK TO BEGIN", "#FFF");
-        document.getElementById("viewport").blur();
+        terrain.generateNpcs(50, "chicken");
+        this.ui.pushMessage("<P> TO BEGIN", "#FFF");
+        game.ui.draw();
         this.state = "ready";
     }
 
@@ -44,12 +66,13 @@ class GameEngine {
 
     gameLoop() {
         if (!game.paused) { 
+            game.time++;
             var current = performance.now();
             game.dt += Math.min(.02, (current - game.lastFrame) / 1000);   // duration capped at 20ms
             while(game.dt > game.step) {
                 game.dt -= game.step;
                 game.update(game.step);
-                game.draw(game.step);
+                if (game.visualization) game.draw(game.step);
             }
             game.lastFrame = current;
             game.ui.draw();
@@ -60,7 +83,11 @@ class GameEngine {
         if (game.state == "loading") {
             terrain.load();
         }
-        window.requestAnimationFrame(game.gameLoop);
+        if (game.visualization) {
+            window.requestAnimationFrame(game.gameLoop);
+        } else {
+            setTimeout(game.gameLoop, 0);
+        }
     }
 
     update(dt) {
@@ -73,7 +100,7 @@ class GameEngine {
         this.plantTimer--;
         if (this.plantTimer <= 0) {
             this.plantTimer = 1000;
-            terrain.generatePlants(10);
+            if (game.entities.length < 600) terrain.generatePlants(10);
         }
 
         controls.actions();
@@ -84,8 +111,41 @@ class GameEngine {
             this.entities[i].update(dt);    
         }
         while (this.toRemove.length > 0) {
-            this.entities.splice(this.entities.indexOf(this.toRemove.pop()),1);
+            var rem = this.toRemove.pop();
+            this.entities.splice(this.entities.indexOf(rem),1);
+            if (rem instanceof Npc && this.getNpcs().length < 2) {
+                this.killNpcs();
+                console.error("Everyone died. Reseeding.  Max age: " + this.recordAge);
+                var temp;
+                for (var i = 0; i < 50; i++) {
+                    temp = DNA.crossover(this.getRandomRecord(), this.recordEnergyGenDNA);
+                    temp.mutate(50);
+                    Npc.create(terrain.getRandomLand(), "chicken", temp);
+                }
+            }
         }
+    }
+
+    getRandomRecord() {
+        var ret;
+        switch(Math.random()*4|0) {
+            case 0:
+                ret = this.recordBirthsDNA;
+                break;
+            case 1:
+                ret = this.recordFoodDNA;
+                break;
+            case 2:
+                ret = this.recordWaterDNA;
+                break;
+            case 3:
+                ret = this.recordEnergyGenDNA;
+                break;
+        }
+        if (!(ret instanceof DNA)) {
+            console.error("Error in get random record");
+        }
+        return ret;
     }
 
     draw(dt) {
@@ -105,16 +165,38 @@ class GameEngine {
         this.ctx.canvas.style.backgroundPosition = vx + "px " + vy + "px";
     }
 
+    selectRandomNpc() {
+        var npcs = this.getNpcs();
+        var r = npcs[Math.random()*npcs.length|0];
+        if (r != undefined) this.selectNpc(r.position.x, r.position.y);
+    }
+
+    getNpcs() {
+        var npcs = [];
+        for (var npc of this.entities) {
+            if (npc instanceof Npc) npcs.push(npc);
+        }
+        return npcs;
+    }
+
+    killNpcs() {
+        for (var npc of this.entities) {
+            if (npc instanceof Npc) npc.die();
+        }
+    }
+
     selectNpc(x, y) {
-        var near = this.quadtree.retrieve(x,y, 20);
+        var near = this.quadtree.retrieve(x,y, 10);
+        var nearest;
         if (near.length > 0) {
-            var nearest = near[0];
             var mouse = new Vector(x,y);
             for (var n of near) {
-                if (n instanceof Npc && Vector.distanceSqrd(mouse, n.position) < Vector.distanceSqrd(mouse, nearest.position)) {
+                if (n instanceof Npc && (nearest == undefined || Vector.distanceSqrd(mouse, n.position) < Vector.distanceSqrd(mouse, nearest.position))) {
                     nearest = n;
                 }
             }
+        }
+        if (nearest != undefined) {
             this.cameraTarget = nearest;
             this.initEntityView(nearest);
         } else {
@@ -133,20 +215,13 @@ class GameEngine {
     }
 
     pause() {
-        if (this.state == "playing") {
-            this.paused = true;
-            this.ui.pushMessage("PAUSED", "#F00");
-            this.ui.pushMessage("- click to continue -","#FFF");
-            game.ui.draw();
-        }
+        this.paused = true;
+        this.ui.pushMessage("PAUSED", "#F00");
+        this.ui.pushMessage("- click to continue -","#FFF");
+        game.ui.draw();
     }
 
     resume() {
-
-        if (this.state == "ready") {
-            this.state = "playing";
-            this.ui.pushMessage("Running", "#F00");
-        }
 
         if (this.paused){
             this.paused = false;
@@ -157,11 +232,96 @@ class GameEngine {
     }
  
     addEntity(entity) {
+        if (entity instanceof Npc) this.population++;
         this.entities.push(entity);
     }
 
     remove(entity) {
+        if (entity instanceof Npc) {
+            this.population--;
+            var isRecord = false;
+            if (entity.timeAlive > this.recordAge && entity.births > 0 && entity.dna.metabolicRate > 0.001) {
+                this.recordAge = entity.timeAlive;
+                this.recordAgeDNA = entity.dna;
+                isRecord = true;
+            }
+            if (entity.births > this.recordBirths) {
+                this.recordBirths = entity.births;
+                this.recordBirthsDNA = entity.dna;
+                isRecord = true;
+            }
+            if (entity.foodEaten > this.recordFood) {
+                this.recordFood = entity.foodEaten;
+                this.recordFoodDNA = entity.dna;
+                isRecord = true;
+            }
+            if (entity.waterDrank > this.recordWater) {
+                this.recordWater = entity.waterDrank;
+                this.recordWaterDNA = entity.dna;
+                isRecord = true;
+            }
+            if (entity.distanceTraveled > this.recordDist) {
+                this.recordDist = entity.distanceTraveled;
+                this.recordDistDNA = entity.dna;
+                isRecord = true;
+            }
+            if (entity.dna.metabolicRate > this.recordMetabolism) {
+                this.recordMetabolism = entity.dna.metabolicRate;
+                this.recordMetabolismDNA = entity.dna;
+                isRecord = true;
+            }
+            if (entity.energyGenerated > this.recordEnergyGen) {
+                this.recordEnergyGen = entity.energyGenerated;
+                this.recordEnergyGenDNA = entity.dna;
+                isRecord = true;
+            }
+            
+            
+            //this.logDNA(entity.dna, entity.timeAlive, this.time, entity.births, isRecord, entity.lastDamage);            
+        };
         this.toRemove.push(entity);
+    }
+
+    logDNA(dna, age, tod, births, record, cause) {
+        document.getElementById("logDNA").value += 
+        record + ", " + 
+        age + ", " + 
+        tod + ", " +
+        births + ", " + 
+        cause + ", " + 
+        dna.metabolicRate + ", " + 
+        dna.thirstThreshold + ", " + 
+        dna.hungerThreshold + ", " + 
+        dna.matingThreshold + ", " + 
+        dna.energyThreshold + ", " + 
+        dna.thirstSated + ", " + 
+        dna.hungerSated + ", " + 
+        dna.energySated + ", " + 
+
+        dna.wanderWeight + ", " + 
+        dna.uphillWeight + ", " + 
+
+        dna.foodPreference + ", " + 
+        dna.attackPreference + ", " + 
+        
+        dna.plantWeight + ", " + 
+        dna.meatWeight + ", " + 
+        dna.waterWeight + ", " + 
+        dna.matingWeight + ", " + 
+        dna.orientationWeight + ", " + 
+        dna.cohesionWeight + ", " + 
+        dna.separationWeight + ", " + 
+        dna.matingDonationM + ", " + 
+        dna.matingDonationF + ", " + 
+
+        dna.drowningAggression + ", " + 
+        dna.foodAggression + ", " + 
+        dna.drinkAggression + ", " + 
+        dna.matingAggression + ", " + 
+        dna.wanderAggression + ", " +
+        
+        dna.attackDelay + ", " +
+        dna.loyalty + "\n";
     }
 
     setStats(npc) { 
@@ -170,17 +330,39 @@ class GameEngine {
         document.getElementById("hunger").value = npc.hunger;
         document.getElementById("thirst").value = npc.thirst;
         document.getElementById("energy").value = npc.energy;
-        document.getElementById("metabolicRate").value = npc.metabolicRate;
-        document.getElementById("thirstThreshold").value = npc.thirstThreshold;
-        document.getElementById("hungerThreshold").value = npc.hungerThreshold;
-        document.getElementById("energyThreshold").value = npc.energyThreshold;
-        document.getElementById("wanderWeight").value = npc.wanderWeight;
-        document.getElementById("uphillWeight").value = npc.uphillWeight;
-        document.getElementById("foodWeight").value = npc.foodWeight;
-        document.getElementById("waterWeight").value = npc.waterWeight;
-        document.getElementById("orientationWeight").value = npc.orientationWeight;
-        document.getElementById("cohesionWeight").value = npc.cohesionWeight;
-        document.getElementById("separationWeight").value = npc.separationWeight;
+        document.getElementById("metabolicRate").value = npc.dna.metabolicRate;
+        document.getElementById("thirstThreshold").value = npc.dna.thirstThreshold;
+        document.getElementById("hungerThreshold").value = npc.dna.hungerThreshold;
+        document.getElementById("matingThreshold").value = npc.dna.matingThreshold;
+        document.getElementById("energyThreshold").value = npc.dna.energyThreshold;
+        document.getElementById("thirstSated").value = npc.dna.thirstSated;
+        document.getElementById("hungerSated").value = npc.dna.hungerSated;
+        document.getElementById("energySated").value = npc.dna.energySated;
+
+        document.getElementById("wanderWeight").value = npc.dna.wanderWeight;
+        document.getElementById("uphillWeight").value = npc.dna.uphillWeight;
+
+        document.getElementById("foodPreference").value = npc.dna.foodPreference;
+        document.getElementById("attackPreference").value = npc.dna.attackPreference;
+
+        document.getElementById("plantWeight").value = npc.dna.plantWeight;
+        document.getElementById("meatWeight").value = npc.dna.meatWeight;
+        document.getElementById("waterWeight").value = npc.dna.waterWeight;
+        document.getElementById("matingWeight").value = npc.dna.matingWeight;
+        document.getElementById("orientationWeight").value = npc.dna.orientationWeight;
+        document.getElementById("cohesionWeight").value = npc.dna.cohesionWeight;
+        document.getElementById("separationWeight").value = npc.dna.separationWeight;
+        document.getElementById("matingDonationM").value = npc.dna.matingDonationM;
+        document.getElementById("matingDonationF").value = npc.dna.matingDonationF;
+
+        document.getElementById("drowningAggression").value = npc.dna.drowningAggression;
+        document.getElementById("foodAggression").value = npc.dna.foodAggression;
+        document.getElementById("drinkAggression").value = npc.dna.drinkAggression;
+        document.getElementById("matingAggression").value = npc.dna.matingAggression;
+        document.getElementById("wanderAggression").value = npc.dna.wanderAggression;
+
+        document.getElementById("attackAggression").value = npc.dna.attackAggression;
+        document.getElementById("loyalty").value = npc.dna.loyalty;
     }
 
     saveData() {
@@ -192,17 +374,30 @@ class GameEngine {
     }
 
     save() {
-        if (this.state == "playing")
-            saveString = this.saveData();
+        saveString = this.saveData();
+        var pom = document.createElement('a');
+        pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(saveString));
+        pom.setAttribute('download', 'saveData.json');
+        pom.click();
     }
 
     load() {
-        game.entities = [];
-        this.loadData(saveString);
+        var pom = document.createElement('input');
+        pom.setAttribute('type', 'file');
+        pom.setAttribute('id', 'load');
+        pom.click();
+        pom.addEventListener('change', function() {
+            var reader = new FileReader();
+            reader.addEventListener('load', function() {
+                game.loadData(this.result);
+            });
+            reader.readAsText(pom.files[0]);
+        
+        }, false);
     }
 
     loadData(data) {
-        // map
+        game.entities = [];
         data = JSON.parse(data);
         for (var entity of data.entities) {
             switch(entity.class) {

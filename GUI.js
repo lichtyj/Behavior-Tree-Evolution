@@ -9,6 +9,7 @@ class GUI {
 
     draw() {
         this.clearUI();
+        graphing.drawPlots() // TODO move this to a new canvas
         this.drawMessages();
         if (game.cameraTarget instanceof(Npc)) {
             this.drawStats(game.cameraTarget);
@@ -20,11 +21,11 @@ class GUI {
     }
 
     pushMessage(msg, color) {
-        console.log("UI msg: " + msg);
-        if (color == undefined) color = "#FFF";
-        this.msg.push(msg);
-        this.msgColor.push(color);
-        this.textFade.push(200);
+        // console.log("UI msg: " + msg);
+        // if (color == undefined) color = "#FFF";
+        // this.msg.push(msg);
+        // this.msgColor.push(color);
+        // this.textFade.push(200);
     }
 
     popMessage(i) {
@@ -38,8 +39,9 @@ class GUI {
         var y = 16;
         this.drawStat(x, y+=16, "Type", npc.spr, "#000");
         this.drawStat(x, y+=16, "Health", npc.health);
-        this.drawStat(x, y+=16, "Hunger", npc.hunger, (npc.hunger < npc.hungerThreshold)? "#F00": "#FFF");
-        this.drawStat(x, y+=16, "Thirst", npc.thirst, (npc.thirst < npc.thirstThreshold)? "#F00": "#FFF");
+        this.drawStat(x, y+=16, "Hunger", npc.hunger, (npc.hunger < npc.dna.hungerThreshold)? "#F00": "#FFF");
+        this.drawStat(x, y+=16, "Thirst", npc.thirst, (npc.thirst < npc.dna.thirstThreshold)? "#F00": "#FFF");
+        this.drawStat(x, y+=16, "Mate", npc.mate, (npc.mate > npc.dna.matingThreshold)? "#F00": "#FFF");
         this.drawStat(x, y+=16, "Energy", npc.energy);
         this.drawStat(x, y+=16, "Position", npc.position.x.toFixed(2) + ", " + npc.position.y.toFixed(2));
         this.drawStat(x, y+=16, "Altitude", terrain.getHeight(npc.position.x, npc.position.y));
@@ -47,6 +49,7 @@ class GUI {
         this.drawStat(x, y+=16, "Slope", slope.x.toFixed(2) + ", " + slope.y.toFixed(2));
         this.drawStat(x, y+=16, "Velocity", npc.velocity.x.toFixed(2) + ", " + npc.velocity.y.toFixed(2));
         this.drawStat(x, y+=16, "Vel Mag", npc.velocity.magnitude());
+        this.drawStat(x, y+=16, "Time Alive", npc.timeAlive);
         }
 
     drawStat(x, y, stat, value, color) {

@@ -1,5 +1,19 @@
 // Stolen from http://www.somethinghitme.com/projects/canvasterrain/
 
+Math.seed = 6;
+ 
+// in order to work 'Math.seed' must NOT be undefined,
+// so in any case, you HAVE to provide a Math.seed
+Math.seededRandom = function(max, min) {
+    max = max || 1;
+    min = min || 0;
+ 
+    Math.seed = (Math.seed * 9301 + 49297) % 233280;
+    var rnd = Math.seed / 233280;
+ 
+    return min + rnd * (max - min);
+}
+
 function generateTerrainMap(mapDimension, unitSize, roughness) {
 	var map = create2DArray(mapDimension+1, mapDimension+1);
 	startDisplacement(map, mapDimension);
@@ -29,19 +43,19 @@ function generateTerrainMap(mapDimension, unitSize, roughness) {
 		var tr, tl, t, br, bl, b, r, l, center;
 
 		// top left
-		map[0][0] = Math.random(1.0);
+		map[0][0] = Math.seededRandom(1.0);
 		tl = map[0][0];
 
 		// bottom left
-		map[0][mapDimension] = Math.random(1.0);
+		map[0][mapDimension] = Math.seededRandom(1.0);
 		bl = map[0][mapDimension];
 
 		// top right
-		map[mapDimension][0] = Math.random(1.0);
+		map[mapDimension][0] = Math.seededRandom(1.0);
 		tr = map[mapDimension][0];
 
 		// bottom right
-		map[mapDimension][mapDimension] = Math.random(1.0);
+		map[mapDimension][mapDimension] = Math.seededRandom(1.0);
 		br = map[mapDimension][mapDimension];
 
 		// Center
@@ -134,7 +148,7 @@ function generateTerrainMap(mapDimension, unitSize, roughness) {
 	// Random function to offset the center
 	function displace(num){
 		var max = num / (mapDimension + mapDimension) * roughness;
-		return (Math.random(1.0)- 0.5) * max;
+		return (Math.seededRandom(1.0)- 0.5) * max;
 	}
 
 	// Normalize the value to make sure its within bounds

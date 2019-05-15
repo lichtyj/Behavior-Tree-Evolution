@@ -14,10 +14,10 @@ class Controls {
             that.keyDown(e.keyCode)});
         this.doc.addEventListener("keyup", function(e) {
             that.keyUp(e.keyCode)});
-        this.doc.addEventListener("focus", function() {
-            that.focus()});
-        this.doc.addEventListener("blur", function() {
-            that.blur()});
+        // this.doc.addEventListener("focus", function() {
+        //     that.focus()});
+        // this.doc.addEventListener("blur", function() {
+        //     that.blur()});
         this.doc.addEventListener("mouseup", function(e) {
             that.mouseButton(e, false) });
         this.doc.addEventListener("mousedown", function(e) {
@@ -26,15 +26,15 @@ class Controls {
             that.mouseWheel(Math.sign(e.deltaY)) });
     }
 
-    focus() {
-        game.resume();
-        document.getElementById("body").style="overflow: hidden;"
-    }
+    // focus() {
+    //     game.resume();
+    //     document.getElementById("body").style="overflow: hidden;"
+    // }
 
-    blur() {
-        game.pause();
-        document.getElementById("body").style="overflow: auto;"
-    }
+    // blur() {
+    //     game.pause();
+    //     document.getElementById("body").style="overflow: auto;"
+    // }
 
     keyUp(num) {
         delete this.keys.splice(this.keys.indexOf(num),1);
@@ -42,7 +42,7 @@ class Controls {
 
     keyDown(num) {
         if (this.keys.indexOf(num) == -1) {
-            console.log(num);
+            // console.log(num);
             this.keys.push(num);
         }
     }
@@ -71,6 +71,10 @@ class Controls {
                         game.ui.draw();
                         this.keyUp(key);
                         break;
+                    case 80: // P
+                        game.resume();
+                        this.keyUp(key);
+                        break;
                 }
             }
         }
@@ -93,10 +97,6 @@ class Controls {
                     }
                     this.keyUp(key);
                     break;
-                case 70: // F
-                    terrain.generateChickens(1);
-                    this.keyUp(key);
-                    break;
                 case 71: // G
                     terrain.generateObjects(25);
                     this.keyUp(key);
@@ -106,11 +106,11 @@ class Controls {
                     this.keyUp(key);
                     break;
                 case 80: // P
-                    if (game.paused) {
-                        game.resume();
-                    } else {
-                        game.pause();
-                    }
+                    game.pause();
+                    this.keyUp(key);
+                    break;
+                case 82: // R
+                    game.selectRandomNpc();
                     this.keyUp(key);
                     break;
                 case 83: // S
@@ -130,7 +130,8 @@ class Controls {
                 case "lmb":
                     if (this.keys.indexOf(81) != -1) { //  Q
                         var npc = Npc.create(new Vector(this.mouseX, this.mouseY, 0), "chicken");
-                        npc.setStats();
+                        npc.dna.mutate(50);
+                        // npc.setStats();
                         game.ui.pushMessage("Added chicken");
                     } else {
                         game.selectNpc(this.mouseX, this.mouseY);
