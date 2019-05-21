@@ -38,14 +38,16 @@ class Npc extends Entity {
         this.lastDamage = "";
         this.dead = false;
         this.facing = new Vector();
+   
+
     }
 
     static create(position, sprite, dna) {
+        Npc.count++;
         var obj = new Npc(position, assetMgr.getSprite(sprite));
         obj.spr = sprite;
         game.addEntity(obj);
         obj.init(dna);
-        graphing.logDna(obj.dna);
         return obj;
     }
 
@@ -65,25 +67,25 @@ class Npc extends Entity {
             n4 = this.ai.addNode(n3, "Inverter", "Invert");
             n5 = this.ai.addNode(n4, "Selector", "Dry?");
                 this.ai.addNode(n5, "Action", "AboveWater?", function() {that.IsAboveWater()});
-                this.ai.addNode(n5, "Action", "Attack", function() {that.Attack(that.dna.drowningAggression)});
+                this.ai.addNode(n5, "Action", "Attack", function() {that.Attack(that.dna.gene["drowningAggression"])});
                 this.ai.addNode(n5, "Action", "FindLand?", function() {that.MoveUphill()});
             n4 = this.ai.addNode(n3, "Sequence", "Drink");
                 this.ai.addNode(n4, "Action", "Thirsty?", function() {that.IsThirsty()});
-                this.ai.addNode(n4, "Action", "Attack", function() {that.Attack(that.dna.drinkAggression)});
+                this.ai.addNode(n4, "Action", "Attack", function() {that.Attack(that.dna.gene["drinkAggression"])});
                 this.ai.addNode(n4, "Action", "FindWater", function() {that.FindWater()});
                 this.ai.addNode(n4, "Action", "Drink", function() {that.Drink()});
             n4 = this.ai.addNode(n3, "Sequence", "Eat");
                 this.ai.addNode(n4, "Action", "Hungry?", function() {that.IsHungry()});
                 this.ai.addNode(n4, "Action", "FindFood", function() {that.FindFood()});
-                this.ai.addNode(n4, "Action", "Attack", function() {that.Attack(that.dna.foodAggression)});
+                this.ai.addNode(n4, "Action", "Attack", function() {that.Attack(that.dna.gene["foodAggression"])});
                 this.ai.addNode(n4, "Action", "Eat", function() {that.Eat()});
             n4 = this.ai.addNode(n3, "Sequence", "Mate");
                 this.ai.addNode(n4, "Action", "Mating?", function() {that.IsMating()});
                 this.ai.addNode(n4, "Action", "FindMate", function() {that.FindMate()});
-                this.ai.addNode(n4, "Action", "Attack", function() {that.Attack(that.dna.matingAggression)});
+                this.ai.addNode(n4, "Action", "Attack", function() {that.Attack(that.dna.gene["matingAggression"])});
                 this.ai.addNode(n4, "Action", "Mate", function() {that.Mate()});
         n2 = this.ai.addNode(n1, "Selector", "Idle");
-            this.ai.addNode(n2, "Action", "Attack", function() {that.Attack(that.dna.wanderAggression)});
+            this.ai.addNode(n2, "Action", "Attack", function() {that.Attack(that.dna.gene["wanderAggression"])});
             this.ai.addNode(n2, "Action", "Wander", function() {that.Wander()});
 
         if (dna == undefined) {
@@ -92,40 +94,13 @@ class Npc extends Entity {
             this.dna = dna;
         }
 
-        this.topAcc = this.dna.metabolicRate * 2;
-        this.topVel = this.dna.metabolicRate * 10;
+        this.topAcc = this.dna.gene["metabolicRate"] * 2;
+        this.topVel = this.dna.gene["metabolicRate"] * 10;
 
         this.acceleration.set(Vector.random(1));
-        btRenderer.setTree(this.ai);
         this.ai.setActive(this.ai.root);
         this.ai.root.resetIndices();
     }
-
-    // setStats() { 
-    //     this.health = this.parseStat(this.health, document.getElementById("health").value);
-    //     this.maxhealth = this.parseStat(this.maxhealth, document.getElementById("maxHealth").value);
-    //     this.hunger = this.parseStat(this.hunger, document.getElementById("hunger").value);
-    //     this.thirst = this.parseStat(this.thirst, document.getElementById("thirst").value);
-    //     this.energy = this.parseStat(this.energy, document.getElementById("energy").value);
-
-    //     this.dna.metabolicRate = this.parseStat(this.dna.metabolicRate, document.getElementById("metabolicRate").value);
-    //     this.dna.thirstThreshold = this.parseStat(this.dna.thirstThreshold, document.getElementById("thirstThreshold").value);
-    //     this.dna.hungerThreshold = this.parseStat(this.dna.hungerThreshold, document.getElementById("hungerThreshold").value);
-    //     this.dna.hungerThreshold = this.parseStat(this.dna.matingThreshold, document.getElementById("matingThreshold").value);
-    //     this.dna.energyThreshold = this.parseStat(this.dna.energyThreshold, document.getElementById("energyThreshold").value);
-    //     this.dna.thirstSated = this.parseStat(this.dna.thirstSated, document.getElementById("thirstSated").value);
-    //     this.dna.hungerSated = this.parseStat(this.dna.energySated, document.getElementById("hungerSated").value);
-    //     this.dna.energySated = this.parseStat(this.dna.energySated, document.getElementById("energySated").value);
-    //     this.dna.wanderWeight = this.parseStat(this.dna.wanderWeight, document.getElementById("wanderWeight").value);
-    //     this.dna.uphillWeight = this.parseStat(this.dna.uphillWeight, document.getElementById("uphillWeight").value);
-    //     this.dna.plantWeight = this.parseStat(this.dna.plantWeight, document.getElementById("plantWeight").value);
-    //     this.dna.meatWeight = this.parseStat(this.dna.meatWeight, document.getElementById("meatWeight").value);
-    //     this.dna.waterWeight = this.parseStat(this.dna.waterWeight, document.getElementById("waterWeight").value);
-    //     this.dna.waterWeight = this.parseStat(this.dna.matingWeight, document.getElementById("matingWeight").value);
-    //     this.dna.orientationWeight = this.parseStat(this.dna.orientationWeight, document.getElementById("orientationWeight").value);
-    //     this.dna.cohesionWeight = this.parseStat(this.dna.cohesionWeight, document.getElementById("cohesionWeight").value);
-    //     this.dna.separationWeight = this.parseStat(this.dna.separationWeight, document.getElementById("separationWeight").value);
-    // }
 
     parseStat(stat, newValue) {
         var ret = stat;
@@ -159,37 +134,37 @@ class Npc extends Entity {
     }
 
     IsThirsty() {
-        if (this.thirsty && this.thirst >= this.dna.thirstSated) {
+        if (this.thirsty && this.thirst >= this.dna.gene["thirstSated"]) {
             this.thirsty = false;
         }
-        if (this.thirst < this.dna.thirstThreshold) {
+        if (this.thirst < this.dna.gene["thirstThreshold"]) {
             this.thirsty = true;
         }
         this.ai.finishAction(this.thirsty);
     }
 
     IsHungry() {
-        if (this.hungry && this.hunger >= this.dna.hungerSated) {
+        if (this.hungry && this.hunger >= this.dna.gene["hungerSated"]) {
             this.hungry = false;
         }
-        if (this.hunger < this.dna.hungerThreshold) {
+        if (this.hunger < this.dna.gene["hungerThreshold"]) {
             this.hungry = true;
         }
         this.ai.finishAction(this.hungry);
     }
 
     IsTired() {
-        if (this.sleepy && this.energy >= this.dna.energySated) {
+        if (this.sleepy && this.energy >= this.dna.gene["energySated"]) {
             this.sleepy = false;
         }
-        if (this.energy < this.dna.energyThreshold) {
+        if (this.energy < this.dna.gene["energyThreshold"]) {
             this.sleepy = true;
         }
         this.ai.finishAction(this.sleepy);
     }
 
     IsMating() {
-        if (this.mate > this.dna.matingThreshold && game.npcs.length < 200) {
+        if (this.mate > this.dna.gene["matingThreshold"] && game.npcs.length < 200) {
             this.mating = true;
         }
         this.ai.finishAction(this.mating);
@@ -218,9 +193,9 @@ class Npc extends Entity {
             if (r instanceof Resource) {
                 if (r.amount > 0) {
                     if (r.type == "bush")
-                        this.hunger += 1 - this.dna.foodPreference/2.0;
+                        this.hunger += 1 - this.dna.gene["foodPreference"]/2.0;
                     if (r.type == "rawMeat")
-                        this.hunger += this.dna.foodPreference/2.0;
+                        this.hunger += this.dna.gene["foodPreference"]/2.0;
                     r.amount--;
                     this.foodEaten++;
                 } else {
@@ -237,16 +212,16 @@ class Npc extends Entity {
     Attack(weight) {
         // console.log("Attacking");
         var near = game.quadtree.retrieve(this.position.x, this.position.y, 5);
-        var offset = this.dna.attackPreference/2.0;
+        var offset = this.dna.gene["attackPreference"]/2.0;
         for (var r of near) {
             if (r instanceof Npc) {
-                if (r.isMale) offset = (2-this.dna.attackPreference)/2.0;
-                if (r.spr == this.spr) offset *= 1-this.dna.loyalty;
+                if (r.isMale) offset = (2-this.dna.gene["attackPreference"])/2.0;
+                if (r.spr == this.spr) offset *= 1-this.dna.gene["loyalty"];
                 if  (Math.random() < weight*offset && this.attackTimer < 0) {
                     this.energy -= 1;
                     r.health -= 25;
-                    r.lastDamage = "Violence"
-                    this.attackTimer = this.dna.attackDelay;
+                    r.lastDamage = "violence"
+                    this.attackTimer = this.dna.gene["attackDelay"];
                     break;
                 }
             }
@@ -263,15 +238,15 @@ class Npc extends Entity {
                     var donation;
                     var mDonation;
                     if (this.isMale) {
-                        donation = this.dna.matingDonationM;
-                        mDonation = m.dna.matingDonationF;
+                        donation = this.dna.gene["matingDonationM"];
+                        mDonation = m.dna.gene["matingDonationF"];
                     } else {
-                        donation = this.dna.matingDonationF;
-                        mDonation = m.dna.matingDonationM;
+                        donation = this.dna.gene["matingDonationF"];
+                        mDonation = m.dna.gene["matingDonationM"];
                     }
 
                     var obj = Npc.create(this.position.clone(), this.spr, DNA.crossover(this.dna, m.dna));
-                    obj.dna.mutate(3);
+                    obj.dna.mutate(5);
                     obj.energy = donation + mDonation;
 
                     this.energy -= donation + 5; // The 5 is half of the energy minimum for meat
@@ -345,7 +320,7 @@ class Npc extends Entity {
             }
             if (found) {
                 chosen.subtract(this.position);
-                chosen.mult(this.dna.waterWeight * this.thirst/this.dna.thirstThreshold);
+                chosen.mult(this.dna.gene["waterWeight"] * this.thirst/this.dna.gene["thirstThreshold"]);
                 this.acceleration.add(chosen);
                 this.ai.finishAction(true);
             } else {
@@ -375,7 +350,7 @@ class Npc extends Entity {
             }
         }
         if (nearest != undefined) {
-            this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.plantWeight * this.hunger/this.dna.hungerThreshold));
+            this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.gene["plantWeight"] * this.hunger/this.dna.gene["hungerThreshold"]));
             if (d < 15) ret = true;
         }
         return ret;
@@ -397,7 +372,7 @@ class Npc extends Entity {
             }
         }
         if (nearest != undefined) {
-            this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.meatWeight * this.hunger/this.dna.hungerThreshold));
+            this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.gene["meatWeight"] * this.hunger/this.dna.gene["hungerThreshold"]));
             if (d < 15) ret = true;
         }
         return ret;
@@ -418,7 +393,7 @@ class Npc extends Entity {
             }
         }
         if (nearest != undefined) {
-            this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.matingWeight * this.mate/this.dna.matingThreshold));
+            this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.gene["matingWeight"] * this.mate/this.dna.gene["matingThreshold"]));
             if (d < 10) {
                 this.ai.finishAction(true);
             } else {
@@ -432,8 +407,8 @@ class Npc extends Entity {
     Wander() {
         // console.log("Wandering");
         var temp = this.facing.clone();
-        if (this.velocity.magnitude() > this.dna.wanderWeight*10) {
-            temp.add(Vector.random(this.dna.wanderWeight));
+        if (this.velocity.magnitude() > this.dna.gene["wanderWeight"]*10) {
+            temp.add(Vector.random(this.dna.gene["wanderWeight"]));
         }
         this.acceleration.add(temp);
         this.ai.finishAction(true);
@@ -442,7 +417,7 @@ class Npc extends Entity {
     MoveUphill() {
         // console.log("Moving uphill");
         var p = terrain.getSlope(this.position.x,this.position.y);
-        p.mult(this.dna.uphillWeight / terrain.getHeight(this.position.x, this.position.y)/0.375);
+        p.mult(this.dna.gene["uphillWeight"]);
         this.acceleration.subtract(p);
         this.ai.finishAction(true);       
     }
@@ -464,7 +439,7 @@ class Npc extends Entity {
         }
         if (count > 0) {
             avg.div(count);
-            this.acceleration.add(avg.mult(this.dna.orientationWeight));
+            this.acceleration.add(avg.mult(this.dna.gene["orientationWeight"]));
         }
         this.ai.finishAction(true);
     }
@@ -479,7 +454,7 @@ class Npc extends Entity {
             }
         }
         if (count > 0) {
-            avg.div(count).subtract(this.position).mult(this.dna.cohesionWeight);
+            avg.div(count).subtract(this.position).mult(this.dna.gene["cohesionWeight"]);
             this.acceleration.add(avg);
         }
         this.ai.finishAction(true);        
@@ -502,7 +477,7 @@ class Npc extends Entity {
         if (total > 0) {
             avg.div(total);
             if (avg.magnitude() > 0.25) 
-                this.acceleration.add(avg.mult(this.dna.separationWeight));
+                this.acceleration.add(avg.mult(this.dna.gene["separationWeight"]));
         }
         this.ai.finishAction(true);
     }
@@ -515,7 +490,7 @@ class Npc extends Entity {
     }
 
     metabolize() {
-        if (Math.random()*50000 <= 1) {
+        if (Math.random()*25000 <= 1) {
             this.lastDamage = "the random number gods";
             this.health = 0;
         }
@@ -525,28 +500,29 @@ class Npc extends Entity {
         }
 
         var temp = this.energy;
+        var metabolicRate = this.dna.gene["metabolicRate"]; 
 
         if (this.energy < 100) {
-            this.hunger -= this.dna.metabolicRate;
-            this.thirst -= this.dna.metabolicRate;
+            this.hunger -= metabolicRate*0.5;
+            this.thirst -= metabolicRate*0.5;
             if (this.hunger > 0 && this.thirst > 0) {
-                this.energy += this.dna.metabolicRate*5;
+                this.energy += metabolicRate*5;
                 if (this.health < this.maxhealth) {
-                    this.health += this.dna.metabolicRate;
-                    this.energy -= this.dna.metabolicRate*2;
+                    this.health += metabolicRate;
+                    this.energy -= metabolicRate*2;
                 }
             } else if (this.thirst <= 0) { // Dehydrated
-                this.energy += this.dna.metabolicRate;
+                this.energy += metabolicRate;
                 // this.health -= this.dna.metabolicRate;
             } else { // Starving
-                this.energy += this.dna.metabolicRate;
+                this.energy += metabolicRate;
                 // this.health -= this.dna.metabolicRate;
             }
         }
 
         this.energyGenerated += this.energy - temp;
 
-        this.energy -= this.dna.metabolicRate;
+        this.energy -= metabolicRate;
 
         this.energy -= this.velocity.magnitude()/16;
         // this.energy -= this.acceleration.magnitude()/2;
@@ -554,9 +530,9 @@ class Npc extends Entity {
         if (this.energy < 0) {
             this.energy = 0;
             this.lastDamage = "malnutrition";
-            this.health -= this.dna.metabolicRate;
-        } else if (this.energy > this.dna.energyThreshold) {
-            this.mate += this.dna.metabolicRate;
+            this.health -= metabolicRate;
+        } else if (this.energy > this.dna.gene["energyThreshold"]) {
+            this.mate += metabolicRate;
             if (this.mate > 100) this.mate = 100;
         }
         if (this.hunger < 0) this.hunger = 0;
@@ -571,8 +547,8 @@ class Npc extends Entity {
         this.timeAlive++;
         this.attackTimer--;
 
-        if (terrain.getHeight(this.position.x, this.position.y) < 0.35) {
-            this.health -= 0.1;
+        if (terrain.getHeight(this.position.x, this.position.y) < 0.360) {
+            this.health -= 1;
             this.lastDamage = "drowning";
         }
 
@@ -603,6 +579,7 @@ class Npc extends Entity {
             }
             game.ui.pushMessage("A " + this.spr + " was killed by " + this.lastDamage, "#800");
             this.dead = true;
+            Npc.count--;
             game.remove(this);
         }
     }
@@ -681,3 +658,5 @@ class Npc extends Entity {
 
     //#endregion save
 }
+
+Npc.count = 0;

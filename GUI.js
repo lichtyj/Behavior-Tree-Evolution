@@ -9,7 +9,7 @@ class GUI {
 
     draw() {
         this.clearUI();
-        graphing.drawPlots() // TODO move this to a new canvas
+        // graphing.drawPlots() // TODO move this to a new canvas
         this.drawMessages();
         if (game.cameraTarget instanceof(Npc)) {
             this.drawStats(game.cameraTarget);
@@ -39,9 +39,9 @@ class GUI {
         var y = 16;
         this.drawStat(x, y+=16, "Type", npc.spr, "#000");
         this.drawStat(x, y+=16, "Health", npc.health);
-        this.drawStat(x, y+=16, "Hunger", npc.hunger, (npc.hunger < npc.dna.hungerThreshold)? "#F00": "#FFF");
-        this.drawStat(x, y+=16, "Thirst", npc.thirst, (npc.thirst < npc.dna.thirstThreshold)? "#F00": "#FFF");
-        this.drawStat(x, y+=16, "Mate", npc.mate, (npc.mate > npc.dna.matingThreshold)? "#F00": "#FFF");
+        this.drawStat(x, y+=16, "Hunger", npc.hunger, (npc.hunger < npc.dna.gene["hungerThreshold"])? "#F00": "#FFF");
+        this.drawStat(x, y+=16, "Thirst", npc.thirst, (npc.thirst < npc.dna.gene["thirstThreshold"])? "#F00": "#FFF");
+        this.drawStat(x, y+=16, "Mate", npc.mate, (npc.mate > npc.dna.gene["matingThreshold"])? "#F00": "#FFF");
         this.drawStat(x, y+=16, "Energy", npc.energy);
         this.drawStat(x, y+=16, "Position", npc.position.x.toFixed(2) + ", " + npc.position.y.toFixed(2));
         this.drawStat(x, y+=16, "Altitude", terrain.getHeight(npc.position.x, npc.position.y));

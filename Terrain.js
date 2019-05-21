@@ -117,7 +117,7 @@ class Terrain {
         this.clampWorld();
         this.draw();
         console.log("Done drawing world");
-        this.generatePlants(200);
+        this.generatePlants(600);
         game.start();
     }
 

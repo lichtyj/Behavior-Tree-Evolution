@@ -1,101 +1,116 @@
 class Graphing {
     constructor() {
-        this.maxSize = 200;
-        this.dnaData = new Array();
-        this.metabolismData = new Array();
-        this.thirstData = new Array();
-        this.hungerData = new Array();
-        this.tSatedData = new Array();
-        this.hSatedData = new Array();
-
-        this.foodPData = new Array();
-        this.attackPData = new Array();
-
-        this.plantWData = new Array();
-        this.meatWData = new Array();
-        this.waterWData = new Array();
-
-        this.energyTData = new Array();
-        this.enerySData = new Array();
-        this.matingTData = new Array();
-        this.matingWData = new Array();
-        this.matingDMData = new Array();
-        this.matingDFData = new Array();
-        
-        this.wanderWData = new Array();
-        this.uphillData = new Array();
-        
-        this.orientationData = new Array();
-        this.cohesionData = new Array();
-        this.separationData = new Array();
-
-        this.drowningAggData = new Array();
-        this.foodAggData = new Array();
-        this.drinkAggData = new Array();
-        this.matingAggData = new Array();
-        this.wanderAggData = new Array();
-
-        this.attackDelayData = new Array();
-
-        this.loyaltyData = new Array();
-
-        this.index = 0;
-
+        this.data = [];
+        this.deathData = [];
+        this.deaths = [];
+        this.deathTypes = [];
+        this.population = [];
+        this.min = [];
+        this.max = [];
         this.ctx;
+        this.buckets = 20;
+
+        this.timeSlice = 0;
+        this.maxTime = 600;
+    }
+
+    dumpData() {
+        var dumpString = "Population";
+        var i, j, k;
+        
+        for (i = 0; i < this.deathTypes.length; i++) {
+            dumpString += this.deathTypes[i] + ", ";
+        }
+
+        for (i = 0; i < DNA.names.length; i++) {
+            for (j = 0; j < this.buckets; j++) {
+                dumpString += DNA.names[i] + "[" + j + "]";
+                (i < DNA.names.length - 1 || j < this.buckets - 1) ? dumpString += ", " : dumpString += "\n";
+            }
+        }
+
+        for (i = 0; i < this.timeSlice; i++) {
+            dumpString += this.population[i] + ", ";
+            for (j = 0; j < this.deathTypes.length; j++) {
+                dumpString += this.deathData[j][i] + ", ";
+            }
+            for (j = 0; j < DNA.names.length; j++) {
+                for (k = 0; k < this.buckets; k++) {
+                    dumpString += this.data[j][k][i];
+                    (j == DNA.names.length - 1 && k == this.buckets - 1 && i == this.timeSlice - 1) ? dumpString += "\n" : dumpString += ", ";
+                }
+            }
+        }
+
+        return dumpString;
     }
 
     init(ctx) {
         this.ctx = ctx;
+        var i, j;
+
+        this.min = new Array(DNA.names.length);
+        this.max = new Array(DNA.names.length);
+
+        for (i = 0; i < DNA.names.length; i++) {
+            this.data[i] = new Array(this.buckets);
+            this.min[i] = this.buckets;
+            this.max[i] = 0;
+            for(j = 0; j < this.buckets; j++) {
+                this.data[i][j] = new Array();
+            }
+        }
     }
 
+    logDeath(cause) {
+        if (this.deaths[cause] == undefined) {
+            this.deaths[cause] = 1;
+            this.deathData[this.deathTypes.length] = [];
+            for (var i = 0; i < this.timeSlice; i++) {
+                this.deathData[this.deathTypes.length][i] = 0;
+            }
+            this.deathData[this.deathTypes.length][this.timeSlice] = 1;
+            this.deathTypes.push(cause); 
+        } else {
+            this.deaths[cause]++;
+            this.deathData[this.deathTypes.indexOf(cause)][this.timeSlice]++;
+        } 
+    }
 
-    logDna(dna) {
+    logTimeSlice() {
+        var npc = game.getNpcs();
+        var n,i,j;
+        var bucket;
 
-        this.dnaData[this.index] = dna;
-        this.metabolismData[this.index] = dna.metabolicRate;
-        this.thirstData[this.index] = dna.thirstThreshold;
-        this.hungerData[this.index] = dna.hungerThreshold;
-        this.tSatedData[this.index] = dna.thirstSated;
-        this.hSatedData[this.index] = dna.hungerSated;
+        for (n = 0; n < npc.length; n++) {
+            for (i = 0; i < DNA.names.length; i++) {
+                for(j = 0; j < this.buckets; j++) {
+                    this.data[i][j].push(0);
+                }
+                bucket = this.getBucket(i, npc[n].dna.gene[DNA.names[i]]);
+                if (this.max[i] < bucket) this.max[i] = bucket;
+                if (this.min[i] > bucket) this.min[i] = bucket;
 
-        this.energyTData[this.index] = dna.energyThreshold;
-        this.enerySData[this.index] = dna.energySated;
+                if (bucket == this.buckets) bucket--;
+                this.data[i][bucket][this.timeSlice] += 1;
+            }
+        }
 
-        this.matingDMData[this.index] = dna.matingDonationM;
-        this.matingDFData[this.index] = dna.matingDonationF;
-        this.matingTData[this.index] = dna.matingThreshold;
-        this.matingWData[this.index] = dna.matingWeight;
+        this.population.push(npc.length);
+        if (this.timeSlice == this.maxTime) {
+            game.endSimulation("Success!");
+        }
+        this.timeSlice++;
 
-        this.foodPData[this.index] = dna.foodPreference;
-        this.attackPData[this.index] = dna.attackPreference;
-
-        this.plantWData[this.index] = dna.plantWeight;
-        this.meatWData[this.index] = dna.meatWeight;
-        this.waterWData[this.index] = dna.waterWeight;
-
-        this.wanderWData[this.index] = dna.wanderWeight;
-        this.uphillData[this.index] = dna.uphillWeight;
-        
-        this.orientationData[this.index] = dna.orientationWeight;
-        this.cohesionData[this.index] = dna.cohesionWeight;
-        this.separationData[this.index] = dna.separationWeight;
-
-        this.drowningAggData[this.index] = dna.drowningAggression;
-        this.foodAggData[this.index] = dna.foodAggression;
-        this.drinkAggData[this.index] = dna.drinkAggression;
-        this.matingAggData[this.index] = dna.matingAggression;
-        this.wanderAggData[this.index] = dna.wanderAggression;
-
-        this.attackDelayData[this.index] = dna.attackDelay;
-
-        this.loyaltyData[this.index] = dna.loyalty;
+        for (i = 0; i < this.deathTypes.length; i++) {
+            this.deathData[i][this.timeSlice] = 0;
+        }
 
         this.drawPlots();
+    }
 
-        this.index++;
-        if (this.index >= this.maxSize) {
-            this.index = 0;
-        }
+    getBucket(geneIndex, value) {
+        return (value / ((DNA.max[geneIndex] - DNA.min[geneIndex]) / this.buckets)) | 0;
     }
 
     clearCanvas() {
@@ -104,59 +119,97 @@ class Graphing {
 
     drawPlots() {
         this.clearCanvas();
-        var height = 60;
+        var height = 50;
         var y = 20;
-        this.drawPlot(8, y, "Metabolic Rates", this.metabolismData);
-        this.drawPlot(8, y+= height, "Thirst Thresholds", this.thirstData);
-        this.drawPlot(8, y+= height, "Hunger Thesholds", this.hungerData);
-        this.drawPlot(8, y+= height, "Thirst Sated", this.tSatedData);
-        this.drawPlot(8, y+= height, "Hunger Sated", this.hSatedData);
-        
-        this.drawPlot(8, y+= height, "Energy Threshold", this.energyTData);
-        this.drawPlot(8, y+= height, "Energy Sated", this.enerySData);
-        
-        this.drawPlot(8, y+= height, "Mating Threshold", this.matingTData);
-        this.drawPlot(8, y+= height, "Mating Donation (Male)", this.matingDMData);
-        this.drawPlot(8, y+= height, "Mating Donation (Female)", this.matingDFData);
-        this.drawPlot(8, y+= height, "Mating Weight", this.matingWData);
-        
-        this.drawPlot(8, y+= height, "Food Preference", this.foodPData);
-        this.drawPlot(8, y+= height, "Attack Preference", this.attackPData);
+        var k = 0;
+        this.drawPlot(8, y + height * k++, "Population", this.population);
+    
+        for (var j = 0; j < this.deathTypes.length; j++) {
+            this.drawPlot(8, y + height * k++, this.deathTypes[j], this.deathData[j]);
+        }
 
-        this.drawPlot(8, y+= height, "Plant Weight", this.plantWData);
-        this.drawPlot(8, y+= height, "Meat Weight", this.meatWData);
-        this.drawPlot(8, y+= height, "Water Weight", this.waterWData);
-        
-        this.drawPlot(8, y+= height, "Wander Weight", this.wanderWData);
-        this.drawPlot(8, y+= height, "Uphill Weight", this.uphillData);
-        
-        this.drawPlot(8, y+= height, "Orientation Weight", this.orientationData);
-        this.drawPlot(8, y+= height, "Cohesion Weight", this.cohesionData);
-        this.drawPlot(8, y+= height, "Separation Weight", this.separationData);
+        for (var i = 0; i < DNA.names.length; i++) {
+            this.scatterPlot(8, y + height * (i + k), DNA.names[i], i);
+        }
 
-        this.drawPlot(8, y+= height, "Drowning Aggression", this.drowningAggData);
-        this.drawPlot(8, y+= height, "Food Aggression", this.foodAggData);
-        this.drawPlot(8, y+= height, "Drink Aggression", this.drinkAggData);
-        this.drawPlot(8, y+= height, "Mating Aggression", this.matingAggData);
-        this.drawPlot(8, y+= height, "Wander Aggression", this.wanderAggData);
-
-        this.drawPlot(8, y+= height, "Attack Delay", this.attackDelayData);
-
-        this.drawPlot(8, y+= height, "Loyalty", this.loyaltyData);
+        this.drawBarGraph(616, y, "Deaths", this.deathTypes, this.deaths);
     }
 
-    drawPlot = function (x,y,label, series) {
-        var height = 15
-        var max = 0;
+    drawBarGraph(x,y, title, labels, data) {
+        var width = 178;
+        var textHeight = 12;
+        var height = labels.length * textHeight;
 
-        for (var i = 0; i < series.length; i++)
+        this.ctx.fillStyle = "black";
+        this.ctx.font = "8px Arial";
+        for (var i = 0; i < labels.length; i++) {
+            this.ctx.fillText(data[labels[i]] + " : " + labels[i], x, y + 8 + i * textHeight); 
+        }
+
+        this.ctx.beginPath();
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "Grey";
+        this.ctx.rect(x-2, y-2, width + 4, height + 6);
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = "black";
+        this.ctx.font = "16px Arial";
+        this.ctx.fillText(title, x, y-6); 
+    }    
+
+    scatterPlot(x, y, title, gene) { 
+        var width = this.maxTime;
+        var increments = 50;
+        var bucketSize = 1;
+        var height = this.buckets*bucketSize;
+
+        this.ctx.beginPath();
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "Grey";
+        this.ctx.rect(x-2, y-2, width + 4, height + 6);
+        this.ctx.stroke();
+
+        var value;
+
+        for (var j = 0; j < this.buckets; j++) {
+            for (var i = 0; i < this.timeSlice; i++) {
+                this.ctx.beginPath();
+                value = (255 - this.data[gene][j][i]*10);
+                // value = "#000";
+                this.ctx.fillStyle = "rgb(255, " + value + ", " + value + ")";
+                this.ctx.rect(x + i * bucketSize, y + (this.buckets - j)*bucketSize, bucketSize, -bucketSize);
+                this.ctx.fill();
+            }
+        }
+        for (var i = 0; i < increments; i++) {
+            this.ctx.beginPath();
+            this.ctx.fillStyle = i % 2 === 0 ? "Black" : "LightGrey";
+            this.ctx.rect(x + width/increments * i, y+height+1, width/increments, 2);
+            this.ctx.fill();
+        }
+
+        this.ctx.fillStyle = "black";
+        this.ctx.font = "16px Arial";
+        this.ctx.fillText(title, x, y-6);
+    }
+
+    drawPlot = function (x,y,title, series) {
+        var height = 20;
+        var width = 600;
+        var increments = 50;
+        var max = series[0];
+        var min = max;
+
+        for (var i = 0; i < series.length; i++) {
             if (series[i] > max) max = series[i];
+            if (series[i] < min) min = series[i];
+        }
         if (max <= 0) max = 0.1;
 
         this.ctx.beginPath();
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = "Grey";
-        this.ctx.rect(x-2, y-2, 204, height + 15);
+        this.ctx.rect(x-2, y-2, width + 4, height + 6);
         this.ctx.stroke();
 
         var avg = 0;
@@ -167,284 +220,26 @@ class Graphing {
             var value = series[i];
             value = value/max*height;
             avg += value;
-            this.ctx.rect(x + (i), y+ height + 9, 1, -value);
+            this.ctx.rect(x + (i), y + height, 1, -value);
             this.ctx.fill();
         }
         if (series.length > 0) {
             this.ctx.fillStyle = "#000";
             avg /= (series.length);
             this.ctx.beginPath();
-            this.ctx.rect(x, y+height+9-avg, series.length, -1);
+            this.ctx.rect(x, y+height-avg, series.length, -1);
     
             this.ctx.fill();
         }
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < increments; i++) {
             this.ctx.beginPath();
             this.ctx.fillStyle = i % 2 === 0 ? "Black" : "LightGrey";
-            this.ctx.rect(x + 20 * i, y+height+9, 20, 2);
+            this.ctx.rect(x + width/increments * i, y+height+1, width/increments, 2);
             this.ctx.fill();
         }
 
         this.ctx.fillStyle = "black";
         this.ctx.font = "16px Arial";
-        this.ctx.fillText(label + " (avg = " + (avg/height*max).toFixed(4) + ")", x, y-6);
+        this.ctx.fillText(title + " - " + min + " | " + (avg/height*max).toFixed(4) + " | " + max, x, y-6);
     }
 }
-
-
-/*
-class Graphing {
-    constructor() {
-        this.maxSize = 1000;
-        this.dnaData = new Array();
-        this.metabolismData = new Array();
-        this.thirstData = new Array();
-        this.hungerData = new Array();
-        this.tSatedData = new Array();
-        this.hSatedData = new Array();
-
-        this.foodPData = new Array();
-        this.attackPData = new Array();
-
-        this.plantWData = new Array();
-        this.meatWData = new Array();
-        this.waterWData = new Array();
-
-        this.energyTData = new Array();
-        this.enerySData = new Array();
-        this.matingTData = new Array();
-        this.matingWData = new Array();
-        this.matingDMData = new Array();
-        this.matingDFData = new Array();
-        
-        this.wanderWData = new Array();
-        this.uphillData = new Array();
-        
-        this.orientationData = new Array();
-        this.cohesionData = new Array();
-        this.separationData = new Array();
-
-        this.drowningAggData = new Array();
-        this.foodAggData = new Array();
-        this.drinkAggData = new Array();
-        this.matingAggData = new Array();
-        this.wanderAggData = new Array();
-
-        this.attackDelayData = new Array();
-
-        this.index = 0;
-
-        this.ctx;
-    }
-
-    init(ctx) {
-        this.ctx = ctx;
-        this.initArrays();
-    }
-
-    initArrays() {
-        this.dnaData[this.index] = new Array();
-        this.metabolismData[this.index] = new Array();
-        this.thirstData[this.index] = new Array();
-        this.hungerData[this.index] = new Array();
-        this.tSatedData[this.index] = new Array();
-        this.hSatedData[this.index] = new Array();
-
-        this.energyTData[this.index] = new Array();
-        this.enerySData[this.index] = new Array();
-
-        this.matingDMData[this.index] = new Array();
-        this.matingDFData[this.index] = new Array();
-
-        this.matingTData[this.index] = new Array();
-        this.matingWData[this.index] = new Array();
-
-        this.foodPData[this.index] = new Array();
-        this.attackPData[this.index] = new Array();
-
-        this.plantWData[this.index] = new Array();
-        this.meatWData[this.index] = new Array();
-        this.waterWData[this.index] = new Array();
-
-        this.wanderWData[this.index] = new Array();
-        this.uphillData[this.index] = new Array();
-        
-        this.orientationData[this.index] = new Array();
-        this.cohesionData[this.index] = new Array();
-        this.separationData[this.index] = new Array();
-
-        this.drowningAggData[this.index] = new Array();
-        this.foodAggData[this.index] = new Array();
-        this.drinkAggData[this.index] = new Array();
-        this.matingAggData[this.index] = new Array();
-        this.wanderAggData[this.index] = new Array();
-
-        this.attackDelayData[this.index] = new Array();
-    }
-
-    logDna(dna) {
-
-        if (this.dnaData[this.index].length >= this.maxSize) {
-            this.index++;
-            this.initArrays();
-        }
-
-        this.dnaData[this.index].push(dna);
-        this.metabolismData[this.index].push(dna.metabolicRate);
-        this.thirstData[this.index].push(dna.thirstThreshold);
-        this.hungerData[this.index].push(dna.hungerThreshold);
-        this.tSatedData[this.index].push(dna.thirstSated);
-        this.hSatedData[this.index].push(dna.hungerSated);
-
-        this.energyTData[this.index].push(dna.energyThreshold);
-        this.enerySData[this.index].push(dna.energySated);
-
-        this.matingDMData[this.index].push(dna.matingDonationM);
-        this.matingDFData[this.index].push(dna.matingDonationF);
-        this.matingTData[this.index].push(dna.matingThreshold);
-        this.matingWData[this.index].push(dna.matingWeight);
-
-        this.foodPData[this.index].push(dna.foodPreference);
-        this.attackPData[this.index].push(dna.attackPreference);
-
-        this.plantWData[this.index].push(dna.plantWeight);
-        this.meatWData[this.index].push(dna.meatWeight);
-        this.waterWData[this.index].push(dna.waterWeight);
-
-        this.wanderWData[this.index].push(dna.wanderWeight);
-        this.uphillData[this.index].push(dna.uphillWeight);
-        
-        this.orientationData[this.index].push(dna.orientationWeight);
-        this.cohesionData[this.index].push(dna.cohesionWeight);
-        this.separationData[this.index].push(dna.separationWeight);
-
-        this.drowningAggData[this.index].push(dna.drowningAggression);
-        this.foodAggData[this.index].push(dna.foodAggression);
-        this.drinkAggData[this.index].push(dna.drinkAggression);
-        this.matingAggData[this.index].push(dna.matingAggression);
-        this.wanderAggData[this.index].push(dna.wanderAggression);
-
-        this.attackDelayData[this.index].push(dna.attackDelay);
-
-        this.drawPlots();
-    }
-
-    clearCanvas() {
-        this.ctx.canvas.width = dataWidth;
-    }
-
-    drawPlots() {
-        this.clearCanvas();
-        var height = 60;
-        var y = 20;
-        this.drawPlot(8, y, "Metabolic Rates", this.metabolismData[this.index]);
-        this.drawPlot(8, y+= height, "Thirst Thresholds", this.thirstData[this.index]);
-        this.drawPlot(8, y+= height, "Hunger Thesholds", this.hungerData[this.index]);
-        this.drawPlot(8, y+= height, "Thirst Sated", this.tSatedData[this.index]);
-        this.drawPlot(8, y+= height, "Hunger Sated", this.hSatedData[this.index]);
-        
-        this.drawPlot(8, y+= height, "Energy Threshold", this.energyTData[this.index]);
-        this.drawPlot(8, y+= height, "Energy Sated", this.enerySData[this.index]);
-        
-        this.drawPlot(8, y+= height, "Mating Threshold", this.matingTData[this.index]);
-        this.drawPlot(8, y+= height, "Mating Donation (Male)", this.matingDMData[this.index]);
-        this.drawPlot(8, y+= height, "Mating Donation (Female)", this.matingDFData[this.index]);
-        this.drawPlot(8, y+= height, "Mating Weight", this.matingWData[this.index]);
-        
-        this.drawPlot(8, y+= height, "Food Preference", this.foodPData[this.index]);
-        this.drawPlot(8, y+= height, "Attack Preference", this.attackPData[this.index]);
-
-        this.drawPlot(8, y+= height, "Plant Weight", this.plantWData[this.index]);
-        this.drawPlot(8, y+= height, "Meat Weight", this.meatWData[this.index]);
-        this.drawPlot(8, y+= height, "Water Weight", this.waterWData[this.index]);
-        
-        this.drawPlot(8, y+= height, "Wander Weight", this.wanderWData[this.index]);
-        this.drawPlot(8, y+= height, "Uphill Weight", this.uphillData[this.index]);
-        
-        this.drawPlot(8, y+= height, "Orientation Weight", this.orientationData[this.index]);
-        this.drawPlot(8, y+= height, "Cohesion Weight", this.cohesionData[this.index]);
-        this.drawPlot(8, y+= height, "Separation Weight", this.separationData[this.index]);
-
-        this.drawPlot(8, y+= height, "Drowning Aggression", this.drowningAggData[this.index]);
-        this.drawPlot(8, y+= height, "Food Aggression", this.foodAggData[this.index]);
-        this.drawPlot(8, y+= height, "Drink Aggression", this.drinkAggData[this.index]);
-        this.drawPlot(8, y+= height, "Mating Aggression", this.matingAggData[this.index]);
-        this.drawPlot(8, y+= height, "Wander Aggression", this.wanderAggData[this.index]);
-
-        this.drawPlot(8, y+= height, "Attack Delay", this.attackDelayData[this.index]);
-    }
-
-    // drawLogPlot = function (x,y,label, series, base) {
-    //     this.ctx.fillStyle = "black";
-    //     this.ctx.font = "12px Arial";
-    //     this.ctx.fillText(label, x+100, y+11);
-
-    //     this.ctx.beginPath();
-    //     this.ctx.lineWidth = 1;
-    //     this.ctx.strokeStyle = "Grey";
-    //     this.ctx.rect(x-2, y-2, 204, 45);
-    //     this.ctx.stroke();
-
-    //     for (var i = 0; i < series.length; i++) {
-    //         this.ctx.beginPath();
-    //         this.ctx.fillStyle = "Red";
-    //         var value = series[i];
-    //         value = Math.log(value + 1) / Math.log(base) * 2;
-    //         this.ctx.rect(x + 2* i, y+39, 2, -value);
-    //         this.ctx.fill();
-    //     }
-    //     for (var i = 0; i < 10; i++) {
-    //         this.ctx.beginPath();
-    //         this.ctx.fillStyle = i % 2 === 0 ? "Black" : "LightGrey";
-    //         this.ctx.rect(x + 20 * i, y+39, 20, 2);
-    //         this.ctx.fill();
-    //     }
-    // }
-
-    drawPlot = function (x,y,label, series) {
-        var height = 15
-        var max = 0;
-
-        for (var i = 0; i < series.length; i++)
-            if (series[i] > max) max = series[i];
-        if (max <= 0) max = 0.1;
-
-        this.ctx.beginPath();
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = "Grey";
-        this.ctx.rect(x-2, y-2, 204, height + 15);
-        this.ctx.stroke();
-
-        var min = 0;
-        var avg = 0;
-        if (series.length > 200) min = series.length - 200;
-
-        for (var i = min; i < series.length; i++) {
-            this.ctx.beginPath();
-            this.ctx.fillStyle = "Red";
-            var value = series[i];
-            value = value/max*height;
-            avg += value;
-            this.ctx.rect(x + i - min, y+ height + 9, 1, -value);
-            this.ctx.fill();
-        }
-        if (series.length > 0) {
-            this.ctx.fillStyle = "#000";
-            avg /= (series.length-min);
-            this.ctx.beginPath();
-            this.ctx.rect(x, y+height+9-avg, series.length, -1);
-    
-            this.ctx.fill();
-        }
-        for (var i = 0; i < 10; i++) {
-            this.ctx.beginPath();
-            this.ctx.fillStyle = i % 2 === 0 ? "Black" : "LightGrey";
-            this.ctx.rect(x + 20 * i, y+height+9, 20, 2);
-            this.ctx.fill();
-        }
-
-        this.ctx.fillStyle = "black";
-        this.ctx.font = "16px Arial";
-        this.ctx.fillText(label + " (avg = " + (avg/height*max).toFixed(4) + ")", x, y-6);
-    }
-}*/
