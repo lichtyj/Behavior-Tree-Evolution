@@ -41,7 +41,7 @@ class GameEngine {
         this.dataLogTimer = 10;
         this.plantTimer = 200;
 
-        this.dataLogInterval = 50;
+        this.dataLogInterval = 25;
         this.plantInterval = 75;
     }
 

@@ -16,6 +16,7 @@ class Npc extends Entity {
         this.foodEaten = 0;
         this.waterDrank = 0;
         this.energyGenerated = 0;
+        this.generation;
 
         // Survival variables
         this.health = 100;
@@ -93,6 +94,8 @@ class Npc extends Entity {
         } else {
             this.dna = dna;
         }
+
+        if (this.generation == undefined) this.generation = 1;
 
         this.topAcc = this.dna.gene["metabolicRate"] * 2;
         this.topVel = this.dna.gene["metabolicRate"] * 10;
@@ -244,10 +247,28 @@ class Npc extends Entity {
                         donation = this.dna.gene["matingDonationF"];
                         mDonation = m.dna.gene["matingDonationM"];
                     }
-
                     var obj = Npc.create(this.position.clone(), this.spr, DNA.crossover(this.dna, m.dna));
+                    if (obj.isMale == this.isMale) {
+                        obj.dna.gene["matingThreshold"] = this.dna.gene["matingThreshold"];
+                    } else {
+                        obj.dna.gene["matingThreshold"] = m.dna.gene["matingThreshold"];
+                    }
+                    // if (obj.isMale) {
+                    //     if (this.isMale)  {
+                    //         // obj.dna.gene["matingDonationM"] = this.dna.gene["matingDonationM"];
+                    //     } else {
+                    //         // obj.dna.gene["matingDonationM"] = m.dna.gene["matingDonationM"];
+                    //     }
+                    // } else {
+                    //     if (this.isMale)  {
+                    //         // obj.dna.gene["matingDonationF"] = m.dna.gene["matingDonationF"];
+                    //     } else {
+                    //         // obj.dna.gene["matingDonationF"] = this.dna.gene["matingDonationF"];
+                    //     }
+                    // }
                     obj.dna.mutate(5);
                     obj.energy = donation + mDonation;
+                    obj.generation = Math.max(this.generation, m.generation) + 1;
 
                     this.energy -= donation + 5; // The 5 is half of the energy minimum for meat
                     if (this.energy < 0) {
@@ -296,9 +317,9 @@ class Npc extends Entity {
             var chosen = new Vector();
             for (i = 0; i < Math.PI*2; i += 0.3) {
                 p.set(this.position);
-                for (j = 0; j < 50; j += 5) {
+                for (j = 0; j < 30; j += 3) {
                     temp = Vector.fromAngle(i);
-                    temp.scale(j);
+                    temp.mult(j);
                     p.add(temp);
                     // if (j > 40) Resource.create(p.clone(), "bush");
                     height = terrain.getHeight(p.x, p.y);
@@ -490,8 +511,8 @@ class Npc extends Entity {
     }
 
     metabolize() {
-        if (Math.random()*25000 <= 1) {
-            this.lastDamage = "the random number gods";
+        if (Math.random()*10000 <= 1) {
+            this.lastDamage = "the rng";
             this.health = 0;
         }
         

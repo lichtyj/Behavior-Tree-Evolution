@@ -164,7 +164,7 @@ class DNA {
         max[i++] = 0.5;//"metabolicRate";
         max[i++] = 100;//"thirstThreshold";
         max[i++] = 100;//"hungerThreshold";
-        max[i++] = 100;//"matingThreshold";
+        max[i++] = 75;//"matingThreshold";
         max[i++] = 100;//"energyThreshold";
         max[i++] = 100;//"thirstSated";
         max[i++] = 100;//"hungerSated";

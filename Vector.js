@@ -42,21 +42,13 @@ class Vector { // Ignores z in all non-elementary calcs
         this.z *= scalar;
         return this;
     }
-
-    scale(scalar) {
-        var temp = this.magnitude();
-        this.x *= scalar;
-        this.y *= scalar;
-        this.z *= scalar;
-        this.limit(temp*scalar);
-        return this;
-    }
-
+    
     limit(max) {
-        var last = Math.abs(this.z) | 0;
-        var mag = this.magnitude();
+        max *= max;
+        // var last = Math.abs(this.z) | 0;
+        var mag = this.magnitudeSqrd();
         if (mag > max) this.div(mag/max);
-        if (Math.abs(this.z > last)) this.z = last;
+        // if (Math.abs(this.z > last)) this.z = last;
         return this;
     }
 
@@ -99,11 +91,11 @@ class Vector { // Ignores z in all non-elementary calcs
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
 
-    MagnitudeSqrd() {
+    magnitudeSqrd() {
         return this.x * this.x + this.y * this.y;
     }
 
-    MagnitudeSqrd3D() {
+    magnitudeSqrd3D() {
         return this.x * this.x + this.y * this.y + this.z * this.z;
     }
 

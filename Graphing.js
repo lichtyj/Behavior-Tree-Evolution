@@ -15,17 +15,16 @@ class Graphing {
     }
 
     dumpData() {
-        var dumpString = "Population";
+        var dumpString = "Population, ";
         var i, j, k;
         
         for (i = 0; i < this.deathTypes.length; i++) {
             dumpString += this.deathTypes[i] + ", ";
         }
-
         for (i = 0; i < DNA.names.length; i++) {
             for (j = 0; j < this.buckets; j++) {
                 dumpString += DNA.names[i] + "[" + j + "]";
-                (i < DNA.names.length - 1 || j < this.buckets - 1) ? dumpString += ", " : dumpString += "\n";
+                (i == DNA.names.length - 1 && j == this.buckets - 1) ? dumpString += "\n " : dumpString += ", ";
             }
         }
 
@@ -37,7 +36,7 @@ class Graphing {
             for (j = 0; j < DNA.names.length; j++) {
                 for (k = 0; k < this.buckets; k++) {
                     dumpString += this.data[j][k][i];
-                    (j == DNA.names.length - 1 && k == this.buckets - 1 && i == this.timeSlice - 1) ? dumpString += "\n" : dumpString += ", ";
+                    (j == DNA.names.length - 1 && k == this.buckets - 1) ? dumpString += "\n" : dumpString += ", ";
                 }
             }
         }
@@ -92,7 +91,10 @@ class Graphing {
                 if (this.min[i] > bucket) this.min[i] = bucket;
 
                 if (bucket == this.buckets) bucket--;
-                this.data[i][bucket][this.timeSlice] += 1;
+                var dataWeight = 1;
+                if (npc[n].isMale) dataWeight *= 1000;
+                dataWeight += 1000000*npc[n].generation;
+                this.data[i][bucket][this.timeSlice] += dataWeight;
             }
         }
 
@@ -106,7 +108,7 @@ class Graphing {
             this.deathData[i][this.timeSlice] = 0;
         }
 
-        this.drawPlots();
+        // this.drawPlots();
     }
 
     getBucket(geneIndex, value) {
@@ -135,6 +137,66 @@ class Graphing {
         this.drawBarGraph(616, y, "Deaths", this.deathTypes, this.deaths);
     }
 
+    drawPlotsFromData(population, deathTypes, deathData) {
+        this.clearCanvas();
+        var height = 70;
+        var y = 20;
+        var k = 0;
+        this.drawPlot(8, y + height * k++, "Population", population);
+    
+        for (var j = 0; j < deathTypes.length; j++) {
+            this.drawPlot(8, y + height * k++, deathTypes[j], deathData[deathTypes[j]]);
+        }
+
+        for (var i = 0; i < DNA.names.length; i++) {
+            this.scatterPlotFromData(8, y + height * (i + k), DNA.names[i], i, data);
+        }
+    }
+
+    scatterPlotFromData(x, y, title, gene, data) {
+        var buckets = data[0].length; 
+        var increments = 50;
+        var bucketSize = 2;
+        var width = data[0][0].length * bucketSize;
+        var height = buckets*bucketSize;
+
+        this.ctx.beginPath();
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "Grey";
+        this.ctx.rect(x-2, y-2, width + 4, height + 6);
+        this.ctx.stroke();
+
+        var value;
+        var males;
+        var females;
+        var generation;
+
+        for (var j = 0; j < buckets; j++) {
+            for (var i = 0; i < data[0][0].length; i++) {
+                this.ctx.beginPath();
+                // value = (255 - data[gene][j][i]*10);
+                value = data[gene][j][i];
+                females = value % 1000;
+                males = (value % 1000000) / 1000;
+                generation = value / 1000000; 
+                this.ctx.fillStyle = "rgb(" + (255 - males * 20) + ", " + (255 - generation) + ", " + (255 - females * 20) + ")";
+                this.ctx.rect(x + i * bucketSize, y + (buckets - j)*bucketSize, bucketSize, -bucketSize);
+                this.ctx.fill();
+            }
+        }
+        for (var i = 0; i < increments; i++) {
+            this.ctx.beginPath();
+            this.ctx.fillStyle = i % 2 === 0 ? "Black" : "LightGrey";
+            this.ctx.rect(x + width/increments * i, y+height+1, width/increments, 2);
+            this.ctx.fill();
+        }
+
+        this.ctx.fillStyle = "black";
+        this.ctx.font = "16px Arial";
+        this.ctx.fillText(title, x, y-6);
+    }
+
+
     drawBarGraph(x,y, title, labels, data) {
         var width = 178;
         var textHeight = 12;
@@ -155,7 +217,7 @@ class Graphing {
         this.ctx.fillStyle = "black";
         this.ctx.font = "16px Arial";
         this.ctx.fillText(title, x, y-6); 
-    }    
+    }
 
     scatterPlot(x, y, title, gene) { 
         var width = this.maxTime;
@@ -170,13 +232,20 @@ class Graphing {
         this.ctx.stroke();
 
         var value;
+        var males;
+        var females;
+        var generation;
 
         for (var j = 0; j < this.buckets; j++) {
             for (var i = 0; i < this.timeSlice; i++) {
                 this.ctx.beginPath();
-                value = (255 - this.data[gene][j][i]*10);
+                // value = (255 - this.data[gene][j][i]*10);
                 // value = "#000";
-                this.ctx.fillStyle = "rgb(255, " + value + ", " + value + ")";
+                value = this.data[gene][j][i];
+                females = value % 1000;
+                males = (value % 1000000) / 1000;
+                generation = value / 1000000; 
+                this.ctx.fillStyle = "rgb(" + (255 - males * 20) + ", " + (255 - (generation/50)) + ", " + (255 - females * 20) + ")";
                 this.ctx.rect(x + i * bucketSize, y + (this.buckets - j)*bucketSize, bucketSize, -bucketSize);
                 this.ctx.fill();
             }
@@ -195,10 +264,11 @@ class Graphing {
 
     drawPlot = function (x,y,title, series) {
         var height = 20;
-        var width = 600;
+        var lineWidth = 1;
         var increments = 50;
         var max = series[0];
         var min = max;
+        var width = series.length * lineWidth;
 
         for (var i = 0; i < series.length; i++) {
             if (series[i] > max) max = series[i];
@@ -220,14 +290,14 @@ class Graphing {
             var value = series[i];
             value = value/max*height;
             avg += value;
-            this.ctx.rect(x + (i), y + height, 1, -value);
+            this.ctx.rect(x + (i * lineWidth), y + height, lineWidth, -value);
             this.ctx.fill();
         }
         if (series.length > 0) {
             this.ctx.fillStyle = "#000";
             avg /= (series.length);
             this.ctx.beginPath();
-            this.ctx.rect(x, y+height-avg, series.length, -1);
+            this.ctx.rect(x, y+height-avg, width, -1);
     
             this.ctx.fill();
         }

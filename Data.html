@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <script language="javascript" type="text/javascript" src="Graphing.js"></script>
+        <script language="javascript" type="text/javascript" src="Data.js"></script>
+        <script language="javascript" type="text/javascript" src="DNA.js"></script>
+        <script type="text/javascript" src="http://24.16.255.56:8888/socket.io/socket.io.js"></script>
+
+        <style>
+            #dataCanvas {
+                width: 1300px;
+                height: 2500px;                
+                /* position: absolute; */
+                border: solid black 1px;
+            }
+
+            li {
+                position: relative;
+                left: 25px;
+                margin: 10px;
+            }
+
+        </style>
+    </head>
+
+    <body id="body">
+        <canvas id="dataCanvas" tabindex="1" style="float: left; border: solid #000 2px;">
+            Your browser does not support the canvas element.
+        </canvas>
+        <input type="file" id="files" name="files[]" multiple />
+        <output id="list"></output>
+        <button onclick="Save()">Save</button>
+        <button onclick="Load()">Load</button>
+    </body>
+</html>
