@@ -1,10 +1,10 @@
 /*
 
 Format for database
-Separate male female data
+//Separate male female data
 data string that describes 
 
-generation number
+//generation number
 
 Turn off drifting genes
 
@@ -74,15 +74,18 @@ function handleFileSelect(evt) {
     console.log("done.");
 }
 
+var socket;
+
 document.addEventListener("DOMContentLoaded", function() {
 
-    var socket = io.connect("http://24.16.255.56:8888");
+    // socket = io.connect("http://");
   
-    socket.on("load", function (data) {
-        console.log(data);
-    });
+    // socket.on("load", function (data) {
+    //     console.log(data.data);
+    // });
 
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    
     var dCanvas = document.getElementById("dataCanvas");
     dCanvas.width = dataWidth;
     dCanvas.height = dataHeight;
@@ -103,7 +106,8 @@ function Load() {
 
 function makeData(e) {
 
-    for (i = 0; i < DNA.names.length; i++) {
+    // for (i = 0; i < DNA.names.length; i++) {
+        for (i = 0; i < 28; i++) {
         data[i] = new Array(buckets);
         min[i] = buckets;
         max[i] = 0;
@@ -149,6 +153,7 @@ function makeData(e) {
                         deathData[deathTypes[4]].push(cells[j]);
                         break;
                     default:
+                        // console.log(cells[j]);
                         data[(j - 6) / buckets | 0][(j - 6) % buckets].push(cells[j]);
                 }
             }
@@ -158,8 +163,14 @@ function makeData(e) {
 }
 
 function addData(e, index) {
+
+    var counter = 10;
     console.log("i: " + index);
     var time;
+    var lmdata;
+    var lfdata;
+    var mdata;
+    var fdata;
     var rows = e.target.result.split("\n");
     for (var i = 1; i < rows.length; i++) {
         var cells = rows[i].split(", ");
@@ -185,7 +196,13 @@ function addData(e, index) {
                     deathData[deathTypes[4]][time] = deathData[deathTypes[4]][time] * (index-1)/index + cells[j] * (1/index);
                     break;
                 default:
-                    data[(j - 6) / buckets | 0][(j - 6) % buckets][time] = data[(j - 6) / buckets | 0][(j - 6) % buckets][time] * (index-1)/index + cells[j] * (1/index);
+                        // data[(j - 6) / buckets | 0][(j - 6) % buckets][time] = data[(j - 6) / buckets | 0][(j - 6) % buckets][time] * (index-1)/index + cells[j] * (1/index);
+                        lmdata = ((data[(j - 6) / buckets | 0][(j - 6) % buckets][time] % 1000000) / 1000) * (index-1)/index;
+                        lfdata = ( data[(j - 6) / buckets | 0][(j - 6) % buckets][time] % 1000           ) * (index-1)/index;
+                        mdata = ((cells[j] % 1000000) / 1000) * (1/index);
+                        fdata = ( cells[j] % 1000           ) * (1/index);
+                        data[(j - 6) / buckets | 0][(j - 6) % buckets][time] = (((lmdata + mdata) |0) * 1000) + (lfdata + fdata);
+                        if (counter-- > 0) console.log(lmdata + ", " + lfdata + ", " + mdata + ", " + fdata);
             }
         }
     }

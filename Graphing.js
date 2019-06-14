@@ -11,6 +11,8 @@ class Graphing {
         this.buckets = 20;
 
         this.timeSlice = 0;
+        this.dbInterval = 600;
+        this.intervals = 0;
         this.maxTime = 600;
     }
 
@@ -18,15 +20,17 @@ class Graphing {
         var dumpString = "Population, ";
         var i, j, k;
         
-        for (i = 0; i < this.deathTypes.length; i++) {
-            dumpString += this.deathTypes[i] + ", ";
-        }
-        for (i = 0; i < DNA.names.length; i++) {
-            for (j = 0; j < this.buckets; j++) {
-                dumpString += DNA.names[i] + "[" + j + "]";
-                (i == DNA.names.length - 1 && j == this.buckets - 1) ? dumpString += "\n " : dumpString += ", ";
+        if (this.intervals == 0) {
+            for (i = 0; i < this.deathTypes.length; i++) {
+                dumpString += this.deathTypes[i] + ", ";
             }
-        }
+            for (i = 0; i < DNA.names.length; i++) {
+                for (j = 0; j < this.buckets; j++) {
+                    dumpString += DNA.names[i] + "[" + j + "]";
+                    (i == DNA.names.length - 1 && j == this.buckets - 1) ? dumpString += "\n " : dumpString += ", ";
+                }
+            }
+        } 
 
         for (i = 0; i < this.timeSlice; i++) {
             dumpString += this.population[i] + ", ";
@@ -83,14 +87,16 @@ class Graphing {
 
         for (n = 0; n < npc.length; n++) {
             for (i = 0; i < DNA.names.length; i++) {
-                for(j = 0; j < this.buckets; j++) {
-                    this.data[i][j].push(0);
+                if (n == 0) {
+                    for(j = 0; j < this.buckets; j++) {
+                        this.data[i][j].push(0);
+                    }
                 }
                 bucket = this.getBucket(i, npc[n].dna.gene[DNA.names[i]]);
                 if (this.max[i] < bucket) this.max[i] = bucket;
                 if (this.min[i] > bucket) this.min[i] = bucket;
 
-                if (bucket == this.buckets) bucket--;
+                if (bucket >= this.buckets) bucket = this.buckets - 1;
                 var dataWeight = 1;
                 if (npc[n].isMale) dataWeight *= 1000;
                 dataWeight += 1000000*npc[n].generation;
@@ -99,7 +105,26 @@ class Graphing {
         }
 
         this.population.push(npc.length);
-        if (this.timeSlice == this.maxTime) {
+        if (this.timeSlice == this.dbInterval) {
+            console.log("statename: " + game.runTitle + "-" + this.intervals);
+            console.log(this.dumpData());
+            // saveString = graphing.dumpData();
+            // var pom = document.createElement('a');
+            // pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(saveString));
+            // pom.setAttribute('download', game.runTitle + "-" + this.intervals + '.json');
+            // pom.click();
+            // socket.emit("save", { studentname: "Josh Lichty", statename: game.runTitle, data: JSON.stringify(game.dataHeader)});
+            // socket.emit("save", { studentname: "Josh Lichty", statename: game.runTitle + "_genes:" + (this.intervals + "").padStart((this.maxTime/this.dbInterval + "").length,"0"), data: JSON.stringify(this.data)});
+            // socket.emit("save", { studentname: "Josh Lichty", statename: game.runTitle + "_pop:" + (this.intervals + "").padStart((this.maxTime/this.dbInterval + "").length,"0"), data: JSON.stringify(this.population)});
+            // socket.emit("save", { studentname: "Josh Lichty", statename: game.runTitle + "_deaths:" + (this.intervals + "").padStart((this.maxTime/this.dbInterval + "").length, "0"), data: JSON.stringify(this.deathData)});
+            this.intervals++;
+            this.timeSlice = 0;
+            game.dataHeader.dataIntervals++;
+            this.population = [];
+            this.init(this.ctx);
+        }
+
+        if (this.timeSlice + this.dbInterval * this.intervals == this.maxTime) {
             game.endSimulation("Success!");
         }
         this.timeSlice++;
@@ -108,7 +133,7 @@ class Graphing {
             this.deathData[i][this.timeSlice] = 0;
         }
 
-        // this.drawPlots();
+        this.drawPlots();
     }
 
     getBucket(geneIndex, value) {
@@ -178,8 +203,7 @@ class Graphing {
                 value = data[gene][j][i];
                 females = value % 1000;
                 males = (value % 1000000) / 1000;
-                generation = value / 1000000; 
-                this.ctx.fillStyle = "rgb(" + (255 - males * 20) + ", " + (255 - generation) + ", " + (255 - females * 20) + ")";
+                this.ctx.fillStyle = "rgb(" + (255 - males * 20) + ", " + (255 - (males + females) * 20) + ", " + (255 - females * 20) + ")";
                 this.ctx.rect(x + i * bucketSize, y + (buckets - j)*bucketSize, bucketSize, -bucketSize);
                 this.ctx.fill();
             }
@@ -234,7 +258,6 @@ class Graphing {
         var value;
         var males;
         var females;
-        var generation;
 
         for (var j = 0; j < this.buckets; j++) {
             for (var i = 0; i < this.timeSlice; i++) {
@@ -244,8 +267,12 @@ class Graphing {
                 value = this.data[gene][j][i];
                 females = value % 1000;
                 males = (value % 1000000) / 1000;
-                generation = value / 1000000; 
-                this.ctx.fillStyle = "rgb(" + (255 - males * 20) + ", " + (255 - (generation/50)) + ", " + (255 - females * 20) + ")";
+                // if (males + females > 0) {
+                //     generation = value / 1000000 / (males + females);
+                // } else {
+                //     generation = 0;
+                // }
+                this.ctx.fillStyle = "rgb(" + (255 - males * 20) + ", " + (255 - (males + females) * 20) + ", " + (255 - females * 20) + ")";
                 this.ctx.rect(x + i * bucketSize, y + (this.buckets - j)*bucketSize, bucketSize, -bucketSize);
                 this.ctx.fill();
             }

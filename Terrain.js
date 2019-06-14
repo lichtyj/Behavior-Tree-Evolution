@@ -66,9 +66,10 @@ class Terrain {
     getRandomLand(noCollisions) {
         if (noCollisions == undefined) noCollisions = false;
         var valid = false;
+        var attempts = 20;
         var h;
         var pos;
-        while (!valid) {
+        while (!valid && attempts-- > 0) {
             pos = Vector.randomPositive(worldSize, false);
             h = this.getHeight(pos.x, pos.y);
             if ((h > 0.375 && h < 0.875) && (game.quadtree.retrieve(pos.x, pos.y, 10).length == 0 || !noCollisions)) {
@@ -81,9 +82,10 @@ class Terrain {
     getRandomLandRange(min, max, noCollisions) {
         if (noCollisions == undefined) noCollisions = false;
         var valid = false;
+        var attempts = 20;
         var h;
         var pos;
-        while (!valid) {
+        while (!valid && attempts-- > 0) {
             pos = Vector.randomPositive(worldSize, false);
             h = this.getHeight(pos.x, pos.y);
             if ((h > min && h < max) && (game.quadtree.retrieve(pos.x, pos.y, 10).length == 0 || !noCollisions)) {
@@ -116,8 +118,7 @@ class Terrain {
         this.map = generateTerrainMap(worldSize, 1, 6);
         this.clampWorld();
         this.draw();
-        console.log("Done drawing world");
-        this.generatePlants(600);
+        this.generatePlants(800);
         game.start();
     }
 
@@ -174,7 +175,6 @@ class Terrain {
             tempCtx.putImageData(new ImageData(v, worldSize, worldSize), 0, 0);
             game.ctx.canvas.style.background = "url(" + can.toDataURL('terrain/png', 1.0) + ")";
             // game.ctx.canvas.style.background = "#00F";
-            console.log("");
             game.ctx.canvas.style.backgroundRepeat = "initial";
             game.ctx.canvas.style.backgroundColor = "rgb(" + this.colors[0].r + ", " + this.colors[0].g + ", " + this.colors[0].b + ", "  + ")";
             game.ctx.canvas.style.backgroundSize = (this.zoom)+"%";
@@ -234,7 +234,7 @@ class Terrain {
                     type = "rawMeat";
                     break;
             }
-            game.addEntity(new Resource(this.getRandomLand(true), type, Math.random()*Math.PI*2, spin));
+            Resource.create(this.getRandomLand(true), type, Math.random()*Math.PI*2, spin);
         }
     }
 
@@ -248,7 +248,7 @@ class Terrain {
                     break;
             }
             // game.addEntity(new Resource(this.getRandomLand(true), type, Math.random()*Math.PI*2, spin));
-            game.addEntity(new Resource(this.getRandomLandRange(0.5, 0.8, true), type, Math.random()*Math.PI*2, spin));
+            Resource.create(this.getRandomLandRange(0.5, 0.8, true), type, Math.random()*Math.PI*2, spin);
         }
     }
 

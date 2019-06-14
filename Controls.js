@@ -141,7 +141,7 @@ class Controls {
             }
         }
 
-        if (moving.magnitude() != 0) {
+        if (moving.magnitudeSqrd() != 0) {
             game.cameraMove(moving.limit(game.viewSpeed));
         }
     }

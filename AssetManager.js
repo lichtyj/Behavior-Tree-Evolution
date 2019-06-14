@@ -7,7 +7,7 @@ class AssetManager {
         this.spr = [];
     }
     queueDownload(path) {
-        console.log("Queueing " + path);
+        // console.log("Queueing " + path);
         this.downloadQueue.push(path);
     }
 
@@ -22,10 +22,10 @@ class AssetManager {
             var that = this;
 
             var path = this.downloadQueue[i];
-            console.log(path);
+            // console.log(path);
 
             img.addEventListener("load", function() {
-                console.log("Loaded " + this.src);
+                // console.log("Loaded " + this.src);
                 that.successCount++;
                 if (that.isDone()) callback();
             });

@@ -3,12 +3,14 @@ class Resource extends StaticEntity {
         super(position, type, rotation);
         this.spin = spin;
         this.type = type;
+        this.underwater;
         this.amount = 100;
     }
 
     static create(position, type, rotation, spin) {
         var obj = new Resource(position, type, rotation, spin);
         game.addEntity(obj);
+        obj.underwater = !terrain.isAboveWater(position);
         return obj;
     }
 
@@ -16,11 +18,14 @@ class Resource extends StaticEntity {
         game.remove(this);
     }
 
-    draw(ctx, dt) {
-        if (this.type == "rawMeat") {
-            if (this.amount <= 0) this.remove();
-            if (Math.random() < 0.01) this.amount--;
+    update() {
+        if (Math.random() < 0.01 || this.underwater) {
+            this.amount--;
+            if (this.amount <= 0 || (this.underwater && this.type == "bush")) this.remove();
         }
+    }
+
+    draw(ctx, dt) {
         this.rotation += this.spin;
         this.elapsedTime += dt;
         this.sprite.drawSprite(ctx, this.elapsedTime, this.position.x, this.position.y, 

@@ -10,6 +10,7 @@ var borderBuffer = 30;
 var worldSize = 1024;
 var ready = 0;
 var saveString = "";
+// var socket;
 
 assetMgr.queueDownload("./sprites/bush.png");
 assetMgr.queueDownload("./sprites/chickenAdultFemale.png");
@@ -24,7 +25,7 @@ assetMgr.queueDownload("./sprites/tree.png");
 assetMgr.queueDownload("./sprites/tree2.png");
 
 assetMgr.downloadAll(function() {
-    console.log("Done loading image assets");
+    // console.log("Done loading image assets");
     createSprites();
 });
 
@@ -42,7 +43,7 @@ function createSprites() {
     assetMgr.createSprite("tree", 16, 16, 24, frameduration, 1);
     assetMgr.createSprite("tree2", 16, 16, 19, frameduration, 1);    
 
-    console.log("Done creating sprites");
+    // console.log("Done creating sprites");
     setReady();
 }
 
@@ -82,7 +83,7 @@ function start() {
     var dCtx = dCanvas.getContext('2d', { alpha: true });
     // dCtx.imageSmoothingEnabled = false;
 
-
+    // socket = io.connect("http://");
     game = new GameEngine(ctx, uiCtx);
     game.init();
     graphing.init(dCtx);

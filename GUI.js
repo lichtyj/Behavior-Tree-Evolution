@@ -10,6 +10,9 @@ class GUI {
     draw() {
         this.clearUI();
         // graphing.drawPlots() // TODO move this to a new canvas
+        this.uiCtx.fillStyle = "#F00";
+        this.uiCtx.fillText(graphing.timeSlice + "/" + graphing.dbInterval, 16, 16);
+        this.uiCtx.fillText(graphing.intervals * graphing.dbInterval + "/" + graphing.maxTime, 16, 32);
         this.drawMessages();
         if (game.cameraTarget instanceof(Npc)) {
             this.drawStats(game.cameraTarget);

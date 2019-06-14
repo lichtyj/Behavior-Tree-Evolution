@@ -42,13 +42,22 @@ class Vector { // Ignores z in all non-elementary calcs
         this.z *= scalar;
         return this;
     }
-    
+
+    scale(scalar) {
+        var temp = this.magnitude();
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+        this.limit(temp*scalar);
+        return this;
+    }
+
     limit(max) {
         max *= max;
-        // var last = Math.abs(this.z) | 0;
+        var last = Math.abs(this.z) | 0;
         var mag = this.magnitudeSqrd();
         if (mag > max) this.div(mag/max);
-        // if (Math.abs(this.z > last)) this.z = last;
+        if (Math.abs(this.z > last)) this.z = last;
         return this;
     }
 

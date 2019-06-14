@@ -33,25 +33,31 @@ class GameEngine {
         this.recordEnergyGenDNA = DNA.default();
 
         this.visualization = false;
+        this.logging = true;
 
         this.npcs = [];
         this.population = 0;
         this.time = 0;
 
-        this.dataLogTimer = 10;
-        this.plantTimer = 200;
+        this.dataLogTimer = 25
+        this.plantTimer = 50;
 
-        this.dataLogInterval = 25;
-        this.plantInterval = 75;
+        this.dataLogInterval = 250;
+        this.plantInterval = 25;
+
+        this.runTitle = "Test";
+        this.dataHeader = { 
+            plantInterval: this.plantInterval,  
+            dataLogInterval: this.dataLogInterval,
+            dataIntervals: 0
+        }
     }
 
     init() {
-        console.log("Initialized");
         this.quadtree = new Quadtree(1, 0, 0, worldSize, worldSize, null);
         this.quadtree.init();
         this.cameraTarget = {position: new Vector(worldSize/2, worldSize/2, 0)};
         this.ui.pushMessage("BUILDING WORLD...", "#FFF");
-        console.log("Loading");
         window.setTimeout(this.gameLoop, 10);
     }
 
@@ -123,15 +129,15 @@ class GameEngine {
             var rem = this.toRemove.pop();
             this.entities.splice(this.entities.indexOf(rem),1);
             if (rem instanceof Npc && this.getNpcs().length < 2) {
-                this.endSimulation("Failed");
-                // this.killNpcs();
-                // console.error("Everyone died. Reseeding.  Max age: " + this.recordAge);
-                // var temp;
-                // for (var i = 0; i < 50; i++) {
-                //     temp = DNA.crossover(this.getRandomRecord(), this.recordEnergyGenDNA);
-                //     temp.mutate(50);
-                //     Npc.create(terrain.getRandomLand(), "chicken", temp);
-                // }
+                // this.endSimulation("Failed");
+                this.killNpcs();
+                console.error("Everyone died. Reseeding.  Max age: " + this.recordAge);
+                var temp;
+                for (var i = 0; i < 50; i++) {
+                    temp = DNA.crossover(this.getRandomRecord(), this.recordEnergyGenDNA);
+                    temp.mutate(50);
+                    Npc.create(terrain.getRandomLand(), "chicken", temp);
+                }
             }
         }
     }
@@ -140,7 +146,7 @@ class GameEngine {
         this.plantTimer--;
         this.dataLogTimer--;
 
-        if (this.dataLogTimer <= 0) {
+        if (this.logging && this.dataLogTimer <= 0) {
             this.dataLogTimer = this.dataLogInterval;
             graphing.logTimeSlice();
         }

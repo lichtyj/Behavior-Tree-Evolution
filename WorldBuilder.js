@@ -1,5 +1,3 @@
-// Stolen from http://www.somethinghitme.com/projects/canvasterrain/
-
 Math.seed = 6;
  
 // in order to work 'Math.seed' must NOT be undefined,
@@ -14,6 +12,7 @@ Math.seededRandom = function(max, min) {
     return min + rnd * (max - min);
 }
 
+// Stolen from http://www.somethinghitme.com/projects/canvasterrain/
 function generateTerrainMap(mapDimension, unitSize, roughness) {
 	var map = create2DArray(mapDimension+1, mapDimension+1);
 	startDisplacement(map, mapDimension);

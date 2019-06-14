@@ -10,7 +10,7 @@ class Npc extends Entity {
         this.separation = Math.random()*15+15;
         this.ai;
         this.dna;
-        this.isMale = Math.random()*2|0;
+        this.isMale;
         this.timeAlive = 0;
         this.distanceTraveled = 0;
         this.foodEaten = 0;
@@ -43,9 +43,14 @@ class Npc extends Entity {
 
     }
 
-    static create(position, sprite, dna) {
+    static create(position, sprite, dna, gender) {
         Npc.count++;
         var obj = new Npc(position, assetMgr.getSprite(sprite));
+        if (gender == undefined) {
+            obj.isMale = Math.random()*2|0;
+        } else {
+            obj.isMale = gender;
+        }
         obj.spr = sprite;
         game.addEntity(obj);
         obj.init(dna);
@@ -69,7 +74,7 @@ class Npc extends Entity {
             n5 = this.ai.addNode(n4, "Selector", "Dry?");
                 this.ai.addNode(n5, "Action", "AboveWater?", function() {that.IsAboveWater()});
                 this.ai.addNode(n5, "Action", "Attack", function() {that.Attack(that.dna.gene["drowningAggression"])});
-                this.ai.addNode(n5, "Action", "FindLand?", function() {that.MoveUphill()});
+                this.ai.addNode(n5, "Action", "FindLand", function() {that.MoveUphill()});
             n4 = this.ai.addNode(n3, "Sequence", "Drink");
                 this.ai.addNode(n4, "Action", "Thirsty?", function() {that.IsThirsty()});
                 this.ai.addNode(n4, "Action", "Attack", function() {that.Attack(that.dna.gene["drinkAggression"])});
@@ -238,34 +243,10 @@ class Npc extends Entity {
         for (var m of near) {
             if (m instanceof Npc && m.spr == this.spr && this.isMale != m.isMale) {
                 if (m.mating && m.isMale != this.isMale) {
-                    var donation;
-                    var mDonation;
-                    if (this.isMale) {
-                        donation = this.dna.gene["matingDonationM"];
-                        mDonation = m.dna.gene["matingDonationF"];
-                    } else {
-                        donation = this.dna.gene["matingDonationF"];
-                        mDonation = m.dna.gene["matingDonationM"];
-                    }
-                    var obj = Npc.create(this.position.clone(), this.spr, DNA.crossover(this.dna, m.dna));
-                    if (obj.isMale == this.isMale) {
-                        obj.dna.gene["matingThreshold"] = this.dna.gene["matingThreshold"];
-                    } else {
-                        obj.dna.gene["matingThreshold"] = m.dna.gene["matingThreshold"];
-                    }
-                    // if (obj.isMale) {
-                    //     if (this.isMale)  {
-                    //         // obj.dna.gene["matingDonationM"] = this.dna.gene["matingDonationM"];
-                    //     } else {
-                    //         // obj.dna.gene["matingDonationM"] = m.dna.gene["matingDonationM"];
-                    //     }
-                    // } else {
-                    //     if (this.isMale)  {
-                    //         // obj.dna.gene["matingDonationF"] = m.dna.gene["matingDonationF"];
-                    //     } else {
-                    //         // obj.dna.gene["matingDonationF"] = this.dna.gene["matingDonationF"];
-                    //     }
-                    // }
+                    var donation = this.dna.gene["matingDonation"];
+                    var mDonation = m.dna.gene["matingDonation"];
+                    var isMale = Math.random()*2|0;
+                    var obj = Npc.create(this.position.clone(), this.spr, DNA.crossover(this.dna, m.dna, isMale), isMale);
                     obj.dna.mutate(5);
                     obj.energy = donation + mDonation;
                     obj.generation = Math.max(this.generation, m.generation) + 1;
@@ -288,13 +269,6 @@ class Npc extends Entity {
                     this.mating = false;
                     this.mate = 0;
                     this.births++;
-                    // game.pause();
-                    // console.log("me");
-                    // console.log(this);
-                    // console.log("other");
-                    // console.log(m);
-                    // console.log("child");
-                    // console.log(obj);
                     ret = true;
                     break;
                 }
@@ -321,7 +295,6 @@ class Npc extends Entity {
                     temp = Vector.fromAngle(i);
                     temp.mult(j);
                     p.add(temp);
-                    // if (j > 40) Resource.create(p.clone(), "bush");
                     height = terrain.getHeight(p.x, p.y);
                     if (height != null) {
                         if (!found && height < lowest) {
@@ -359,11 +332,11 @@ class Npc extends Entity {
         // console.log("Finding Plants");
         var ret = false;        
         var nearest;
-        var d = this.vision;
+        var d = this.vision * this.vision;
         var temp;
         for (var r of this.canSee) {
             if (r instanceof Resource && r.type == "bush") {
-                temp = Vector.distance(this.position, r.position);
+                temp = Vector.distanceSqrd(this.position, r.position);
                 if (temp < d) {
                     d = temp;
                     nearest = r;
@@ -372,7 +345,7 @@ class Npc extends Entity {
         }
         if (nearest != undefined) {
             this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.gene["plantWeight"] * this.hunger/this.dna.gene["hungerThreshold"]));
-            if (d < 15) ret = true;
+            if (d < 15 * 15) ret = true;
         }
         return ret;
     }
@@ -381,11 +354,11 @@ class Npc extends Entity {
         // console.log("Finding Meat");
         var ret = false;
         var nearest;
-        var d = this.vision;
+        var d = this.vision * this.vision;
         var temp;
         for (var r of this.canSee) {
             if (r instanceof Resource && r.type == "rawMeat") {
-                temp = Vector.distance(this.position, r.position);
+                temp = Vector.distanceSqrd(this.position, r.position);
                 if (temp < d) {
                     d = temp;
                     nearest = r;
@@ -394,7 +367,7 @@ class Npc extends Entity {
         }
         if (nearest != undefined) {
             this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.gene["meatWeight"] * this.hunger/this.dna.gene["hungerThreshold"]));
-            if (d < 15) ret = true;
+            if (d < 15 * 15) ret = true;
         }
         return ret;
     }
@@ -402,11 +375,11 @@ class Npc extends Entity {
     FindMate() {
         // console.log("Finding mate");
         var nearest;
-        var d = this.vision;
+        var d = this.vision * this.vision;
         var temp;
         for (var r of this.canSee) {
             if (r instanceof Npc && r.spr == this.spr) {
-                temp = Vector.distance(this.position, r.position);
+                temp = Vector.distanceSqrd(this.position, r.position);
                 if (temp < d) {
                     d = temp;
                     nearest = r;
@@ -415,7 +388,7 @@ class Npc extends Entity {
         }
         if (nearest != undefined) {
             this.acceleration.add(Vector.towardPoint(this.position, nearest.position).mult(this.dna.gene["matingWeight"] * this.mate/this.dna.gene["matingThreshold"]));
-            if (d < 10) {
+            if (d < 10 * 10) {
                 this.ai.finishAction(true);
             } else {
                 this.ai.finishAction(false);
@@ -428,7 +401,7 @@ class Npc extends Entity {
     Wander() {
         // console.log("Wandering");
         var temp = this.facing.clone();
-        if (this.velocity.magnitude() > this.dna.gene["wanderWeight"]*10) {
+        if (this.velocity.magnitudeSqrd() > this.dna.gene["wanderWeight"] * this.dna.gene["wanderWeight"] * 100) {
             temp.add(Vector.random(this.dna.gene["wanderWeight"]));
         }
         this.acceleration.add(temp);
@@ -497,7 +470,7 @@ class Npc extends Entity {
         }
         if (total > 0) {
             avg.div(total);
-            if (avg.magnitude() > 0.25) 
+            if (avg.magnitudeSqrd() > 0.125) 
                 this.acceleration.add(avg.mult(this.dna.gene["separationWeight"]));
         }
         this.ai.finishAction(true);
