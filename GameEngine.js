@@ -32,7 +32,7 @@ class GameEngine {
         this.recordEnergyGen = 0;
         this.recordEnergyGenDNA = DNA.default();
 
-        this.visualization = false;
+        this.visualization = true;
         this.logging = true;
 
         this.npcs = [];
